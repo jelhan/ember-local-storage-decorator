@@ -43,7 +43,7 @@ const Klass = class {
 const klass = new Klass();
 
 klass.foo = 'baz';
-window.localStorage.getItem('fo'); // '"baz"'
+window.localStorage.getItem('foo'); // '"baz"'
 ```
 
 You may specify another key to be used in local storage as an argument to the
