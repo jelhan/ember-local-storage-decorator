@@ -1,7 +1,7 @@
-ember-local-storage-decorator
+Ember Local Storage Decorator
 ==============================================================================
 
-[Short description of the addon.]
+Decorator to use `localStorage` in Ember Octane.
 
 
 Compatibility
@@ -23,7 +23,100 @@ ember install ember-local-storage-decorator
 Usage
 ------------------------------------------------------------------------------
 
-[Longer description of how to use the addon in apps.]
+```js
+import localStorage from 'ember-local-storage-decorator';
+import Component from '@glimmer/component';
+
+export default class MyComponent extends Component {
+  @localStorage() foo
+}
+```
+
+Decorate a class property with `@localStorage` to bind it to `localStorage`.
+It will attach a getter to read the value from `localStorage` and a setter
+to write changes to `localStorage`.
+
+```js
+const Klass = class {
+  @localStorage() foo;
+}
+const klass = new Klass();
+
+klass.foo = 'baz';
+window.localStorage.getItem('fo'); // '"baz"'
+```
+
+You may specify another key to be used in local storage as an argument to the
+decorator.
+
+```js
+const Klass = class {
+  @localStorage('bar') foo;
+};
+const klass = new Klass();
+
+klass.foo = 'baz';
+window.localStorage.getItem('bar'); // '"baz"'
+```
+
+The value is stored as a JSON string in `localStorage`. Therefore only values
+which can be serialized to JSON are supported.
+
+It observes changes caused by other classes or by other instances:
+
+```js
+const KlassA = class {
+  @localStorage() foo;
+};
+const KlassB = class {
+  @localStorage() foo;
+}
+const klassA = new KlassA();
+const klassB = new KlassB();
+
+klassA.foo = 'bar';
+klassB.foo; // 'bar'
+
+window.dispatchEvent(
+  new StorageEvent('storage', { key: 'foo', newValue: 'baz', oldValue: 'bar' })
+);
+klassA.foo; // 'baz'
+klassB.foo; // 'baz'
+```
+
+Due to limitations of `localStorage` direct changes of the value bypassing
+`@localStorage` decorator can not be observed. Therefore you _should not_
+manipulate the `localStorage` directly.
+
+## Testing
+
+`window.localStorage` is a global state, which is shared between test runs.
+The decorator uses a global cache, which is also shared between instances.
+Both are not reset automatically between test jobs.
+
+To avoid leaking state between test jobs it's recommended to clear the cache
+of `@localStorage` decorator before each test. A `clearLocalStorageCache`
+helper function is exported from `ember-local-storage-decorator` to do so.
+
+Additionally `window.localStorage` should be either cleared before each test
+run or mocked.
+
+```js
+import { module, test } from 'qunit';
+import { setupRenderingTest } from 'ember-qunit';
+import localStorage, {
+  clearLocalStorageCache,
+} from 'ember-local-storage-decorator';
+
+module('Integration | Component | my-component', function (hooks) {
+  setupRenderingTest(hooks);
+
+  hooks.beforeEach(function () {
+    clearLocalStorageCache();
+    window.localStorage.clear();
+  });
+});
+```
 
 
 Contributing
