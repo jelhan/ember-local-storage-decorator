@@ -1,9 +1,9 @@
-import { TrackedMap } from "tracked-maps-and-sets";
+import { TrackedMap } from 'tracked-maps-and-sets';
 
 const localStorageCache = new TrackedMap();
 
 // register event lister to update local state on local storage changes
-window.addEventListener("storage", function ({ key, newValue }) {
+window.addEventListener('storage', function ({ key, newValue }) {
   // skip changes to other keys
   if (!localStorageCache.has(key)) {
     return;
