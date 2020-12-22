@@ -1,13 +1,13 @@
 {
   "name": "ember-local-storage-decorator",
   "version": "0.0.0",
-  "description": "The default blueprint for ember-cli addons.",
+  "description": "Decorator to use localStorage in Ember Octane",
   "keywords": [
     "ember-addon"
   ],
-  "repository": "",
+  "repository": "https://github.com/jelhan/ember-local-storage-decorator.git",
   "license": "MIT",
-  "author": "",
+  "author": "Jeldrik Hanschke",
   "directories": {
     "doc": "doc",
     "test": "tests"
