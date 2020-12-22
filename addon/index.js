@@ -1,6 +1,21 @@
-import { TrackedMap } from 'tracked-maps-and-sets';
+import { TrackedMap } from "tracked-maps-and-sets";
 
 const localStorageCache = new TrackedMap();
+
+// register event lister to update local state on local storage changes
+window.addEventListener("storage", function ({ key, newValue }) {
+  // skip changes to other keys
+  if (!localStorageCache.has(key)) {
+    return;
+  }
+
+  // skip if setting to same value
+  if (localStorageCache.get(key) === newValue) {
+    return;
+  }
+
+  localStorageCache.set(key, JSON.parse(newValue));
+});
 
 export default function localStorageDecorator(customLocalStorageKey) {
   return function (target, key, descriptor) {
@@ -12,21 +27,6 @@ export default function localStorageDecorator(customLocalStorageKey) {
         JSON.parse(window.localStorage.getItem(localStorageKey))
       );
     }
-
-    // register event lister to update local state on local storage changes
-    window.addEventListener('storage', function ({ key, newValue }) {
-      // skip changes to other keys
-      if (key !== localStorageKey) {
-        return;
-      }
-
-      // skip if setting to same value
-      if (localStorageCache.get(localStorageKey) === newValue) {
-        return;
-      }
-
-      localStorageCache.set(localStorageKey, JSON.parse(newValue));
-    });
 
     // register getter and setter
     return {
