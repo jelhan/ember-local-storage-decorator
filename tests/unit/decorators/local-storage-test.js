@@ -30,6 +30,16 @@ module('Unit | Decorator | @localStorage', function (hooks) {
     });
   });
 
+  module('optional parentheses', function () {
+    test('it can be invoked without parentheses', function (assert) {
+      const klass = new (class {
+        @localStorage foo = 'no parentheses';
+      })();
+
+      assert.equal(klass.foo, 'no parentheses');
+    });
+  });
+
   module('getter', function () {
     test('picks up simple value from local storage', function (assert) {
       window.localStorage.setItem('foo', JSON.stringify('baz'));

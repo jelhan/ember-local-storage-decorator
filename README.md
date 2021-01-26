@@ -28,7 +28,7 @@ import localStorage from 'ember-local-storage-decorator';
 import Component from '@glimmer/component';
 
 export default class MyComponent extends Component {
-  @localStorage() foo
+  @localStorage foo
 }
 ```
 
@@ -38,7 +38,7 @@ to write changes to `localStorage`.
 
 ```js
 const Klass = class {
-  @localStorage() foo;
+  @localStorage foo;
 }
 const klass = new Klass();
 
@@ -69,7 +69,7 @@ frozen copy after setting a value.
 window.localStorage.setItem('foo', [{ a: 'b' }]);
 
 const Klass = class {
-  @localStorage() foo;
+  @localStorage foo;
 };
 const klass = new Klass();
 
@@ -87,10 +87,10 @@ It observes changes caused by other classes or by other instances:
 
 ```js
 const KlassA = class {
-  @localStorage() foo;
+  @localStorage foo;
 };
 const KlassB = class {
-  @localStorage() foo;
+  @localStorage foo;
 }
 const klassA = new KlassA();
 const klassB = new KlassB();

@@ -25,8 +25,13 @@ window.addEventListener('storage', function ({ key, newValue }) {
   localStorageCache.set(key, jsonParseAndFreeze(newValue));
 });
 
-export default function localStorageDecorator(customLocalStorageKey) {
-  return function (target, key, descriptor) {
+export default function localStorageDecoratorFactory(...args) {
+  const isDirectDecoratorInvocation = isElementDescriptor(...args);
+  const customLocalStorageKey = isDirectDecoratorInvocation
+    ? undefined
+    : args[0];
+
+  function localStorageDecorator(target, key, descriptor) {
     const localStorageKey = customLocalStorageKey ?? key;
 
     // Check if key is already managed. If it is not managed yet, initialize it
@@ -63,10 +68,39 @@ export default function localStorageDecorator(customLocalStorageKey) {
         window.localStorage.setItem(localStorageKey, json);
       },
     };
-  };
+  }
+
+  return isDirectDecoratorInvocation
+    ? localStorageDecorator(...args)
+    : localStorageDecorator;
 }
 
 export function clearLocalStorageCache() {
   managedKeys.clear();
   localStorageCache.clear();
+}
+
+// This will detect if the function arguments match the legacy decorator pattern
+//
+// Borrowed from the Ember Data source code:
+// https://github.com/emberjs/data/blob/22a8f20e2f11ed82c85160944e976073dc530d8b/packages/model/addon/-private/util.ts#L5
+function isElementDescriptor(...args) {
+  let [maybeTarget, maybeKey, maybeDescriptor] = args;
+
+  return (
+    // Ensure we have the right number of args
+    args.length === 3 &&
+    // Make sure the target is a class or object (prototype)
+    (typeof maybeTarget === 'function' ||
+      (typeof maybeTarget === 'object' && maybeTarget !== null)) &&
+    // Make sure the key is a string
+    typeof maybeKey === 'string' &&
+    // Make sure the descriptor is the right shape
+    ((typeof maybeDescriptor === 'object' &&
+      maybeDescriptor !== null &&
+      'enumerable' in maybeDescriptor &&
+      'configurable' in maybeDescriptor) ||
+      // TS compatibility
+      maybeDescriptor === undefined)
+  );
 }
