@@ -1,11 +1,12 @@
 import { TrackedMap } from 'tracked-maps-and-sets';
 
+const managedKeys = new Set();
 const localStorageCache = new TrackedMap();
 
 // register event lister to update local state on local storage changes
 window.addEventListener('storage', function ({ key, newValue }) {
   // skip changes to other keys
-  if (!localStorageCache.has(key)) {
+  if (!managedKeys.has(key)) {
     return;
   }
 
@@ -21,7 +22,13 @@ export default function localStorageDecorator(customLocalStorageKey) {
   return function (target, key, descriptor) {
     const localStorageKey = customLocalStorageKey ?? key;
 
-    if (!localStorageCache.has(localStorageKey)) {
+    // Check if key is already managed. If it is not managed yet, initialize it
+    // in localStorageCache with the current value in local storage.
+    // Need to use a separate, not tracked data store to do this check
+    // because a tracked value (`localStorageCache`) must not be read
+    // before it is set.
+    if (!managedKeys.has(localStorageKey)) {
+      managedKeys.add(localStorageKey);
       localStorageCache.set(
         localStorageKey,
         JSON.parse(window.localStorage.getItem(localStorageKey))
@@ -47,5 +54,6 @@ export default function localStorageDecorator(customLocalStorageKey) {
 }
 
 export function clearLocalStorageCache() {
+  managedKeys.clear();
   localStorageCache.clear();
 }
