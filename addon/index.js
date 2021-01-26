@@ -3,6 +3,13 @@ import { TrackedMap } from 'tracked-maps-and-sets';
 const managedKeys = new Set();
 const localStorageCache = new TrackedMap();
 
+// like JSON.parse() but all returned objects are frozen
+function jsonParseAndFreeze(json) {
+  return JSON.parse(json, (key, value) =>
+    typeof value === 'object' ? Object.freeze(value) : value
+  );
+}
+
 // register event lister to update local state on local storage changes
 window.addEventListener('storage', function ({ key, newValue }) {
   // skip changes to other keys
@@ -15,7 +22,7 @@ window.addEventListener('storage', function ({ key, newValue }) {
     return;
   }
 
-  localStorageCache.set(key, JSON.parse(newValue));
+  localStorageCache.set(key, jsonParseAndFreeze(newValue));
 });
 
 export default function localStorageDecorator(customLocalStorageKey) {
@@ -31,7 +38,7 @@ export default function localStorageDecorator(customLocalStorageKey) {
       managedKeys.add(localStorageKey);
       localStorageCache.set(
         localStorageKey,
-        JSON.parse(window.localStorage.getItem(localStorageKey))
+        jsonParseAndFreeze(window.localStorage.getItem(localStorageKey))
       );
     }
 
@@ -46,8 +53,14 @@ export default function localStorageDecorator(customLocalStorageKey) {
         );
       },
       set(value) {
-        localStorageCache.set(localStorageKey, value);
-        window.localStorage.setItem(localStorageKey, JSON.stringify(value));
+        const json = JSON.stringify(value);
+
+        // Update local storage cache. It must include a froozen copy the
+        // the value to prevent leaking state between different consumers.
+        localStorageCache.set(localStorageKey, jsonParseAndFreeze(json));
+
+        // Update local storage.
+        window.localStorage.setItem(localStorageKey, json);
       },
     };
   };

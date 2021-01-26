@@ -49,6 +49,8 @@ module('Unit | Decorator | @localStorage', function (hooks) {
       })();
 
       assert.deepEqual(klass.foo, [{ bar: 'baz' }]);
+      assert.ok(Object.isFrozen(klass.foo), 'freezes complex value');
+      assert.ok(Object.isFrozen(klass.foo[0]), 'deep freezes complex value');
     });
 
     test('supports custom local storage key', function (assert) {
@@ -95,10 +97,14 @@ module('Unit | Decorator | @localStorage', function (hooks) {
         @localStorage() foo;
       })();
 
-      klass.foo = [{ bar: 'baz' }];
-      assert.deepEqual(JSON.parse(window.localStorage.getItem('foo')), [
-        { bar: 'baz' },
-      ]);
+      const value = [{ bar: 'baz' }];
+
+      klass.foo = value;
+      assert.deepEqual(JSON.parse(window.localStorage.getItem('foo')), value);
+      assert.ok(Object.isFrozen(klass.foo), 'object is frozen');
+      assert.ok(Object.isFrozen(klass.foo[0]), 'object is deep frozen');
+      assert.notOk(klass.foo === value, 'object is a copy of the one set');
+      assert.notOk(Object.isFrozen(value), 'original object is not mutated');
     });
 
     test('supports custom local storage key', function (assert) {
