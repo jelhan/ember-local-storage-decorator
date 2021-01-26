@@ -62,6 +62,27 @@ window.localStorage.getItem('bar'); // '"baz"'
 The value is stored as a JSON string in `localStorage`. Therefore only values
 which can be serialized to JSON are supported.
 
+Objects (and arrays) are deep frozen to avoid leaking state. Getter returns a
+frozen copy after setting a value.
+
+```js
+window.localStorage.setItem('foo', [{ a: 'b' }]);
+
+const Klass = class {
+  @localStorage() foo;
+};
+const klass = new Klass();
+
+Object.isFrozen(klass.foo); // true
+Object.isFrozen(klass.foo[0]); // true
+
+const newValue = {};
+klass.foo = newValue;
+
+Object.isFrozen(klass.foo); // true
+Object.isFrozen(newValue); // false
+```
+
 It observes changes caused by other classes or by other instances:
 
 ```js
