@@ -42,7 +42,7 @@ on:
   pull_request:
 
 env:
-  NODE_VERSION: '10.x'
+  NODE_VERSION: '12.x'
 
 jobs:
   lint:
@@ -180,7 +180,7 @@ jobs:
     needs: test
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         ember-try-scenario: [
           ember-lts-3.16,
