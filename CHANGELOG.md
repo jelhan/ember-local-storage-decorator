@@ -1,5 +1,22 @@
 # Changelog
 
+
+## v0.3.0 (2021-10-05)
+
+#### :boom: Breaking Change
+* [#28](https://github.com/jelhan/ember-local-storage-decorator/pull/28) drop support for Ember < 3.24 ([@jelhan](https://github.com/jelhan))
+* [#24](https://github.com/jelhan/ember-local-storage-decorator/pull/24) drop support for node 10 ([@jelhan](https://github.com/jelhan))
+* [#23](https://github.com/jelhan/ember-local-storage-decorator/pull/23) update dependency tracked-maps-and-sets to v3 ([@renovate[bot]](https://github.com/apps/renovate))
+
+#### :rocket: Enhancement
+* [#27](https://github.com/jelhan/ember-local-storage-decorator/pull/27) allow to reinitialize local storage properties in tests ([@jelhan](https://github.com/jelhan))
+* [#12](https://github.com/jelhan/ember-local-storage-decorator/pull/12) Support invoking without parentheses ([@Windvis](https://github.com/Windvis))
+
+#### Committers: 2
+- Jeldrik Hanschke ([@jelhan](https://github.com/jelhan))
+- Sam Van Campenhout ([@Windvis](https://github.com/Windvis))
+
+
 ## v0.2.0 (2021-01-26)
 
 #### :bug: Bug Fix
