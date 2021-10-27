@@ -7,8 +7,8 @@ Decorator to use `localStorage` in Ember Octane.
 Compatibility
 ------------------------------------------------------------------------------
 
-* Ember.js v3.16 or above
-* Ember CLI v2.13 or above
+* Ember.js v3.24 or above
+* Ember CLI v3.24 or above
 * Node.js v12 or above
 
 
@@ -125,9 +125,7 @@ run or mocked.
 ```js
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
-import localStorage, {
-  clearLocalStorageCache,
-} from 'ember-local-storage-decorator';
+import { clearLocalStorageCache } from 'ember-local-storage-decorator';
 
 module('Integration | Component | my-component', function (hooks) {
   setupRenderingTest(hooks);
@@ -139,6 +137,21 @@ module('Integration | Component | my-component', function (hooks) {
 });
 ```
 
+`@localStorage` decorator performs some initialization work when a property
+is decorated. This includes picking up the current value from local storage
+and adding it to its internal cache. Manual changes to local storage _after_
+a property has been decorated are _not_ picked up. As class instances are
+often shared between test jobs, you need to manual reinitialize a local
+storage key in tests.
+
+```js
+import { initalizeLocalStorageKey } from 'ember-local-storage-decorator';
+
+test('some code relying on a value in local storage', function() {
+  window.localStorage.setItem('foo', 'bar');
+  initalizeLocalStorageKey('foo');
+});
+```
 
 Contributing
 ------------------------------------------------------------------------------

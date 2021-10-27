@@ -1,6 +1,6 @@
 {
   "name": "ember-local-storage-decorator",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Decorator to use localStorage in Ember Octane",
   "keywords": [
     "ember-addon"
@@ -25,7 +25,7 @@
   "dependencies": {
     "ember-cli-babel": "^7.23.0",
     "ember-cli-htmlbars": "^5.3.1",
-    "tracked-maps-and-sets": "^2.2.0"
+    "tracked-maps-and-sets": "^3.0.0"
   },
   "devDependencies": {
     "@ember/optional-features": "^2.0.0",
@@ -48,7 +48,7 @@
     "ember-resolver": "^8.0.2",
     "ember-source": "~3.28.0",
     "ember-source-channel-url": "^3.0.0",
-    "ember-template-lint": "^2.14.0",
+    "ember-template-lint": "^3.0.0",
     "ember-try": "^1.4.0",
     "eslint": "^7.15.0",
     "eslint-config-prettier": "^8.0.0",

@@ -2,6 +2,7 @@ import { module, test } from 'qunit';
 import { setupTest } from 'ember-qunit';
 import localStorage, {
   clearLocalStorageCache,
+  initalizeLocalStorageKey,
 } from 'ember-local-storage-decorator';
 
 module('Unit | Decorator | @localStorage', function (hooks) {
@@ -157,6 +158,29 @@ module('Unit | Decorator | @localStorage', function (hooks) {
 
       // assert
       assert.equal(klass.foo, 'bar');
+    });
+  });
+
+  module('test support', function () {
+    test('developer can reinitialize a local storage key in tests', function (assert) {
+      // create a class, which will be used between multiple tests runs
+      class Foo {
+        @localStorage foo;
+      }
+
+      // use the class in first test
+      assert.equal(new Foo().foo, null);
+
+      // reset local storage cache as developer is expected to do in beforeEach hook
+      window.localStorage.clear();
+      clearLocalStorageCache();
+
+      // arrange local storage value for another test
+      window.localStorage.setItem('foo', JSON.stringify('bar'));
+      initalizeLocalStorageKey('foo');
+
+      // use the class in second test
+      assert.equal(new Foo().foo, 'bar');
     });
   });
 });
