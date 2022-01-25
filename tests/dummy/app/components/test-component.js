@@ -3,11 +3,14 @@ import Component from '@glimmer/component';
 import localStorage from 'ember-local-storage-decorator';
 
 export default class TestComponentComponent extends Component {
-  @localStorage()
-  baz;
+  @localStorage
+  foo;
+
+  @localStorage
+  bar;
 
   @action
-  updateBaz() {
-    this.baz = 'baz';
+  updateFoo() {
+    this.foo = 'foo';
   }
 }

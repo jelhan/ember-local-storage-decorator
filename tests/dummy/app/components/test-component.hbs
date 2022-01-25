@@ -1,6 +1,11 @@
-{{this.baz}}
+{{this.foo}}
 
 <button
   type="button"
-  {{on "click" this.updateBaz}}
+  {{on "click" this.updateFoo}}
 ></button>
+
+{{#if @onInvalidation}}
+  {{did-update (fn @onInvalidation 'foo') this.foo}}
+  {{did-update (fn @onInvalidation 'bar') this.bar}}
+{{/if}}
