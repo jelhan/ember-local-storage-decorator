@@ -183,11 +183,10 @@ jobs:
       fail-fast: false
       matrix:
         ember-try-scenario: [
-          ember-lts-3.16,
-          ember-lts-3.20,
+          ember-lts-3.28,
+          ember-lts-4.4,
           ember-release,
           ember-beta,
-          ember-default-with-jquery,
           ember-classic
         ]
         allow-failure: [false]
