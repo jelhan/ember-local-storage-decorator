@@ -63,7 +63,7 @@ jobs:
 
     - name: Cache package manager's global cache and node_modules
       id: cache-dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ steps.global-cache-dir-path.outputs.dir }}
@@ -108,7 +108,7 @@ jobs:
 
     - name: Cache package manager's global cache and node_modules
       id: cache-dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ steps.global-cache-dir-path.outputs.dir }}
@@ -153,7 +153,7 @@ jobs:
 
     - name: Cache package manager's global cache and node_modules
       id: cache-dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ steps.global-cache-dir-path.outputs.dir }}
@@ -210,7 +210,7 @@ jobs:
 
     - name: Cache package manager's global cache and node_modules
       id: cache-dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{ steps.global-cache-dir-path.outputs.dir }}
