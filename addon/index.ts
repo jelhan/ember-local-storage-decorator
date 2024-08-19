@@ -4,7 +4,7 @@ const managedKeys = new Set();
 const localStorageCache = new TrackedMap();
 
 // like JSON.parse() but all returned objects are frozen
-function jsonParseAndFreeze(json) {
+function jsonParseAndFreeze(json: string) {
   return JSON.parse(json, (key, value) =>
     typeof value === 'object' ? Object.freeze(value) : value
   );
@@ -22,19 +22,23 @@ window.addEventListener('storage', function ({ key, newValue }) {
     return;
   }
 
-  localStorageCache.set(key, jsonParseAndFreeze(newValue));
+  localStorageCache.set(key, jsonParseAndFreeze(newValue as string));
 });
 
-export default function localStorageDecoratorFactory(...args) {
+export default function localStorageDecoratorFactory(...args: unknown[]) {
   const isDirectDecoratorInvocation = isElementDescriptor(...args);
   const customLocalStorageKey = isDirectDecoratorInvocation
     ? undefined
     : args[0];
 
-  function localStorageDecorator(target, key, descriptor) {
+  function localStorageDecorator(
+    target: unknown,
+    key: PropertyKey,
+    descriptor: PropertyDecorator & { initializer: () => void }
+  ) {
     const localStorageKey = customLocalStorageKey ?? key;
 
-    initalizeLocalStorageKey(localStorageKey);
+    initalizeLocalStorageKey(localStorageKey as string);
 
     // register getter and setter
     return {
@@ -46,7 +50,7 @@ export default function localStorageDecoratorFactory(...args) {
             : undefined)
         );
       },
-      set(value) {
+      set(value: unknown) {
         const json = JSON.stringify(value);
 
         // Update local storage cache. It must include a froozen copy the
@@ -54,13 +58,14 @@ export default function localStorageDecoratorFactory(...args) {
         localStorageCache.set(localStorageKey, jsonParseAndFreeze(json));
 
         // Update local storage.
-        window.localStorage.setItem(localStorageKey, json);
+        window.localStorage.setItem(localStorageKey as string, json);
       },
     };
   }
 
   return isDirectDecoratorInvocation
-    ? localStorageDecorator(...args)
+    ? // @ts-expect-error A spread argument must either have a tuple type or be passed to a rest parameter.
+      localStorageDecorator(...args)
     : localStorageDecorator;
 }
 
@@ -69,7 +74,7 @@ export function clearLocalStorageCache() {
   localStorageCache.clear();
 }
 
-export function initalizeLocalStorageKey(key) {
+export function initalizeLocalStorageKey(key: string) {
   // Check if key is already managed. If it is not managed yet, initialize it
   // in localStorageCache with the current value in local storage.
   // Need to use a separate, not tracked data store to do this check
@@ -79,7 +84,7 @@ export function initalizeLocalStorageKey(key) {
     managedKeys.add(key);
     localStorageCache.set(
       key,
-      jsonParseAndFreeze(window.localStorage.getItem(key))
+      jsonParseAndFreeze(window.localStorage.getItem(key) as string)
     );
   }
 }
@@ -88,8 +93,8 @@ export function initalizeLocalStorageKey(key) {
 //
 // Borrowed from the Ember Data source code:
 // https://github.com/emberjs/data/blob/22a8f20e2f11ed82c85160944e976073dc530d8b/packages/model/addon/-private/util.ts#L5
-function isElementDescriptor(...args) {
-  let [maybeTarget, maybeKey, maybeDescriptor] = args;
+function isElementDescriptor(...args: unknown[]) {
+  const [maybeTarget, maybeKey, maybeDescriptor] = args;
 
   return (
     // Ensure we have the right number of args
