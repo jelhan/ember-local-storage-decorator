@@ -15,21 +15,24 @@ module('Integration | Component | test-component', function (hooks) {
   test('it works inside a component', async function (assert) {
     await render(hbs`<TestComponent />`);
     assert.dom().hasText('');
-    assert.equal(JSON.parse(window.localStorage.getItem('foo')), null);
+    assert.equal(JSON.parse(window.localStorage.getItem('foo')!), null);
 
     await click('button');
     assert.dom().hasText('foo');
-    assert.equal(JSON.parse(window.localStorage.getItem('foo')), 'foo');
+    assert.equal(JSON.parse(window.localStorage.getItem('foo')!), 'foo');
   });
 
   test('setting one property does not invalidate another', async function (assert) {
-    let invalidationCounter = {
+    const invalidationCounter = {
       foo: 0,
       bar: 0,
     };
-    this.set('invalidationTracker', (property) => {
-      invalidationCounter[property]++;
-    });
+    this.set(
+      'invalidationTracker',
+      (property: keyof typeof invalidationCounter) => {
+        invalidationCounter[property]++;
+      }
+    );
     await render(
       hbs`<TestComponent @onInvalidation={{this.invalidationTracker}} />`
     );

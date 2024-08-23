@@ -1,5 +1,7 @@
 import { TrackedMap } from 'tracked-maps-and-sets';
 
+type PropertyDescriptorInit = PropertyDescriptor & { initializer: () => void };
+
 const managedKeys = new Set();
 const localStorageCache = new TrackedMap();
 
@@ -25,16 +27,29 @@ window.addEventListener('storage', function ({ key, newValue }) {
   localStorageCache.set(key, jsonParseAndFreeze(newValue as string));
 });
 
-export default function localStorageDecoratorFactory(...args: unknown[]) {
+export default function localStorageDecoratorFactory(
+  target: unknown,
+  propertyKey: PropertyKey
+): void;
+
+export default function localStorageDecoratorFactory(
+  customLocalStorageKey: string
+): (
+  target: unknown,
+  propertyKey: PropertyKey,
+  descriptor: PropertyDescriptorInit
+) => void;
+
+export default function localStorageDecoratorFactory(
+  ...args: [unknown, PropertyKey, PropertyDescriptorInit]
+) {
   const isDirectDecoratorInvocation = isElementDescriptor(...args);
   const customLocalStorageKey = isDirectDecoratorInvocation
     ? undefined
     : args[0];
 
   function localStorageDecorator(
-    target: unknown,
-    key: PropertyKey,
-    descriptor: PropertyDecorator & { initializer: () => void }
+    ...[target, key, descriptor]: [unknown, PropertyKey, PropertyDescriptorInit]
   ) {
     const localStorageKey = customLocalStorageKey ?? key;
 
@@ -45,7 +60,7 @@ export default function localStorageDecoratorFactory(...args: unknown[]) {
       get() {
         return (
           localStorageCache.get(localStorageKey) ??
-          (descriptor.initializer
+          (descriptor?.initializer
             ? descriptor.initializer.call(target)
             : undefined)
         );
@@ -64,8 +79,7 @@ export default function localStorageDecoratorFactory(...args: unknown[]) {
   }
 
   return isDirectDecoratorInvocation
-    ? // @ts-expect-error A spread argument must either have a tuple type or be passed to a rest parameter.
-      localStorageDecorator(...args)
+    ? localStorageDecorator(...args)
     : localStorageDecorator;
 }
 
@@ -82,10 +96,12 @@ export function initalizeLocalStorageKey(key: string) {
   // before it is set.
   if (!managedKeys.has(key)) {
     managedKeys.add(key);
-    localStorageCache.set(
-      key,
-      jsonParseAndFreeze(window.localStorage.getItem(key) as string)
-    );
+
+    const item = window.localStorage.getItem(key);
+    if (item === null) {
+      throw new Error();
+    }
+    localStorageCache.set(key, jsonParseAndFreeze(item));
   }
 }
 
@@ -93,7 +109,9 @@ export function initalizeLocalStorageKey(key: string) {
 //
 // Borrowed from the Ember Data source code:
 // https://github.com/emberjs/data/blob/22a8f20e2f11ed82c85160944e976073dc530d8b/packages/model/addon/-private/util.ts#L5
-function isElementDescriptor(...args: unknown[]) {
+function isElementDescriptor(
+  ...args: [unknown, PropertyKey, PropertyDescriptor]
+): boolean {
   const [maybeTarget, maybeKey, maybeDescriptor] = args;
 
   return (

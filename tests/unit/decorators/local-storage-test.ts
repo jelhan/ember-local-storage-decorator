@@ -16,7 +16,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
   module('default values', function () {
     test('it defaults to null', function (assert) {
       const klass = new (class {
-        @localStorage() foo;
+        @localStorage() foo: unknown;
       })();
 
       assert.equal(klass.foo, null);
@@ -46,7 +46,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
       window.localStorage.setItem('foo', JSON.stringify('baz'));
 
       const klass = new (class {
-        @localStorage() foo;
+        @localStorage() foo: string | undefined;
       })();
 
       assert.equal(klass.foo, 'baz');
@@ -56,19 +56,19 @@ module('Unit | Decorator | @localStorage', function (hooks) {
       window.localStorage.setItem('foo', JSON.stringify([{ bar: 'baz' }]));
 
       const klass = new (class {
-        @localStorage() foo;
+        @localStorage() foo: unknown[] | undefined;
       })();
 
       assert.deepEqual(klass.foo, [{ bar: 'baz' }]);
       assert.ok(Object.isFrozen(klass.foo), 'freezes complex value');
-      assert.ok(Object.isFrozen(klass.foo[0]), 'deep freezes complex value');
+      assert.ok(Object.isFrozen(klass.foo![0]), 'deep freezes complex value');
     });
 
     test('supports custom local storage key', function (assert) {
       window.localStorage.setItem('bar', JSON.stringify('baz'));
 
       const klass = new (class {
-        @localStorage('bar') foo;
+        @localStorage('bar') foo: string | undefined;
       })();
 
       assert.equal(klass.foo, 'baz');
@@ -78,7 +78,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
   module('setter', function () {
     test('user can set a simple value', function (assert) {
       const klass = new (class {
-        @localStorage() foo;
+        @localStorage() foo: string | undefined;
       })();
 
       klass.foo = 'bar';
@@ -87,7 +87,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
 
     test('user can set a complex value', function (assert) {
       const klass = new (class {
-        @localStorage() foo;
+        @localStorage() foo: unknown[] | undefined;
       })();
 
       klass.foo = [{ bar: 'baz' }];
@@ -96,22 +96,22 @@ module('Unit | Decorator | @localStorage', function (hooks) {
 
     test('persistes simple value in local storage', function (assert) {
       const klass = new (class {
-        @localStorage() foo;
+        @localStorage() foo: string | undefined;
       })();
 
       klass.foo = 'baz';
-      assert.equal(JSON.parse(window.localStorage.getItem('foo')), 'baz');
+      assert.equal(JSON.parse(window.localStorage.getItem('foo')!), 'baz');
     });
 
     test('persists complex value in local storage', function (assert) {
       const klass = new (class {
-        @localStorage() foo;
+        @localStorage() foo: unknown[] | undefined;
       })();
 
       const value = [{ bar: 'baz' }];
 
       klass.foo = value;
-      assert.deepEqual(JSON.parse(window.localStorage.getItem('foo')), value);
+      assert.deepEqual(JSON.parse(window.localStorage.getItem('foo')!), value);
       assert.ok(Object.isFrozen(klass.foo), 'object is frozen');
       assert.ok(Object.isFrozen(klass.foo[0]), 'object is deep frozen');
       assert.notOk(klass.foo === value, 'object is a copy of the one set');
@@ -120,21 +120,21 @@ module('Unit | Decorator | @localStorage', function (hooks) {
 
     test('supports custom local storage key', function (assert) {
       const klass = new (class {
-        @localStorage('bar') foo;
+        @localStorage('bar') foo: unknown;
       })();
 
       klass.foo = 'baz';
-      assert.equal(JSON.parse(window.localStorage.getItem('bar')), 'baz');
+      assert.equal(JSON.parse(window.localStorage.getItem('bar')!), 'baz');
     });
   });
 
   module('external changes', function () {
     test('picks up changes caused by another class', function (assert) {
       const klassA = new (class {
-        @localStorage() foo;
+        @localStorage() foo: unknown;
       })();
       const klassB = new (class {
-        @localStorage() foo;
+        @localStorage() foo: unknown;
       })();
 
       klassA.foo = 'bar';
@@ -143,7 +143,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
 
     test('picks up changes caused by other tabs', async function (assert) {
       const klass = new (class {
-        @localStorage() foo;
+        @localStorage() foo: unknown;
       })();
 
       // assert initial state
@@ -165,7 +165,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
     test('developer can reinitialize a local storage key in tests', function (assert) {
       // create a class, which will be used between multiple tests runs
       class Foo {
-        @localStorage foo;
+        @localStorage foo: unknown;
       }
 
       // use the class in first test
