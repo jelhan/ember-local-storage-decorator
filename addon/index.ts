@@ -44,10 +44,11 @@ export default function localStorageDecoratorFactory(
 export default function localStorageDecoratorFactory(
   ...args: [string] | DecoratorArgs
 ): PropertyDescriptor | ((...args: DecoratorArgs) => void) {
-  const isDirectDecoratorInvocation = isElementDescriptor(...args);
+  const isDirectDecoratorInvocation = isElementDescriptor(args);
+
   const customLocalStorageKey = isDirectDecoratorInvocation
     ? undefined
-    : (args[0] as string);
+    : args[0];
 
   function localStorageDecorator(...[target, key, descriptor]: DecoratorArgs) {
     let localStorageKey = customLocalStorageKey ?? key;
@@ -82,7 +83,7 @@ export default function localStorageDecoratorFactory(
   }
 
   return isDirectDecoratorInvocation
-    ? localStorageDecorator(...(args as DecoratorArgs))
+    ? localStorageDecorator(...args)
     : localStorageDecorator;
 }
 
@@ -111,7 +112,9 @@ export function initalizeLocalStorageKey(key: string) {
 //
 // Borrowed from the Ember Data source code:
 // https://github.com/emberjs/data/blob/22a8f20e2f11ed82c85160944e976073dc530d8b/packages/model/addon/-private/util.ts#L5
-function isElementDescriptor(...args: [string] | DecoratorArgs): boolean {
+function isElementDescriptor(
+  args: [string] | DecoratorArgs
+): args is DecoratorArgs {
   const [maybeTarget, maybeKey, maybeDescriptor] = args;
 
   return (
