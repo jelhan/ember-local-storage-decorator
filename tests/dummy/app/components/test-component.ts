@@ -4,10 +4,10 @@ import localStorage from 'ember-local-storage-decorator';
 
 export default class TestComponentComponent extends Component {
   @localStorage
-  foo;
+  foo: unknown;
 
   @localStorage
-  bar;
+  bar: unknown;
 
   @action
   updateFoo() {

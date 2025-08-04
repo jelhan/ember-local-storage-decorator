@@ -1,10 +1,13 @@
 import { TrackedMap } from 'tracked-maps-and-sets';
 
+type PropertyDescriptorInit = PropertyDescriptor & { initializer: () => void };
+type DecoratorArgs = [unknown, PropertyKey, PropertyDescriptorInit?];
+
 const managedKeys = new Set();
 const localStorageCache = new TrackedMap();
 
 // like JSON.parse() but all returned objects are frozen
-function jsonParseAndFreeze(json) {
+function jsonParseAndFreeze(json: string) {
   return JSON.parse(json, (key, value) =>
     typeof value === 'object' ? Object.freeze(value) : value
   );
@@ -22,17 +25,37 @@ window.addEventListener('storage', function ({ key, newValue }) {
     return;
   }
 
+  // skip if newValue is null
+  if (newValue === null) {
+    return;
+  }
+
   localStorageCache.set(key, jsonParseAndFreeze(newValue));
 });
 
-export default function localStorageDecoratorFactory(...args) {
-  const isDirectDecoratorInvocation = isElementDescriptor(...args);
+export default function localStorageDecoratorFactory(
+  ...args: DecoratorArgs
+): void;
+
+export default function localStorageDecoratorFactory(
+  customLocalStorageKey: string
+): (...args: DecoratorArgs) => void;
+
+export default function localStorageDecoratorFactory(
+  ...args: [string] | DecoratorArgs
+): PropertyDescriptor | ((...args: DecoratorArgs) => void) {
+  const isDirectDecoratorInvocation = isElementDescriptor(args);
+
   const customLocalStorageKey = isDirectDecoratorInvocation
     ? undefined
     : args[0];
 
-  function localStorageDecorator(target, key, descriptor) {
-    const localStorageKey = customLocalStorageKey ?? key;
+  function localStorageDecorator(...[target, key, descriptor]: DecoratorArgs) {
+    let localStorageKey = customLocalStorageKey ?? key;
+
+    if (typeof localStorageKey !== 'string') {
+      localStorageKey = localStorageKey.toString();
+    }
 
     initalizeLocalStorageKey(localStorageKey);
 
@@ -41,12 +64,12 @@ export default function localStorageDecoratorFactory(...args) {
       get() {
         return (
           localStorageCache.get(localStorageKey) ??
-          (descriptor.initializer
+          (descriptor?.initializer
             ? descriptor.initializer.call(target)
             : undefined)
         );
       },
-      set(value) {
+      set(value: unknown) {
         const json = JSON.stringify(value);
 
         // Update local storage cache. It must include a froozen copy the
@@ -69,7 +92,7 @@ export function clearLocalStorageCache() {
   localStorageCache.clear();
 }
 
-export function initalizeLocalStorageKey(key) {
+export function initalizeLocalStorageKey(key: string) {
   // Check if key is already managed. If it is not managed yet, initialize it
   // in localStorageCache with the current value in local storage.
   // Need to use a separate, not tracked data store to do this check
@@ -77,10 +100,11 @@ export function initalizeLocalStorageKey(key) {
   // before it is set.
   if (!managedKeys.has(key)) {
     managedKeys.add(key);
-    localStorageCache.set(
-      key,
-      jsonParseAndFreeze(window.localStorage.getItem(key))
-    );
+
+    const item = window.localStorage.getItem(key);
+    if (item !== null) {
+      localStorageCache.set(key, jsonParseAndFreeze(item));
+    }
   }
 }
 
@@ -88,8 +112,10 @@ export function initalizeLocalStorageKey(key) {
 //
 // Borrowed from the Ember Data source code:
 // https://github.com/emberjs/data/blob/22a8f20e2f11ed82c85160944e976073dc530d8b/packages/model/addon/-private/util.ts#L5
-function isElementDescriptor(...args) {
-  let [maybeTarget, maybeKey, maybeDescriptor] = args;
+function isElementDescriptor(
+  args: [string] | DecoratorArgs
+): args is DecoratorArgs {
+  const [maybeTarget, maybeKey, maybeDescriptor] = args;
 
   return (
     // Ensure we have the right number of args
