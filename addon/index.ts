@@ -47,12 +47,16 @@ export default function localStorageDecoratorFactory(
   const isDirectDecoratorInvocation = isElementDescriptor(...args);
   const customLocalStorageKey = isDirectDecoratorInvocation
     ? undefined
-    : args[0];
+    : (args[0] as string);
 
   function localStorageDecorator(...[target, key, descriptor]: DecoratorArgs) {
-    const localStorageKey = customLocalStorageKey ?? key;
+    let localStorageKey = customLocalStorageKey ?? key;
 
-    initalizeLocalStorageKey(localStorageKey as string);
+    if (typeof localStorageKey !== 'string') {
+      localStorageKey = localStorageKey.toString();
+    }
+
+    initalizeLocalStorageKey(localStorageKey);
 
     // register getter and setter
     return {
@@ -72,7 +76,7 @@ export default function localStorageDecoratorFactory(
         localStorageCache.set(localStorageKey, jsonParseAndFreeze(json));
 
         // Update local storage.
-        window.localStorage.setItem(localStorageKey as string, json);
+        window.localStorage.setItem(localStorageKey, json);
       },
     };
   }
