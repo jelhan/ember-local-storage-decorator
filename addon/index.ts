@@ -24,24 +24,16 @@ window.addEventListener('storage', function ({ key, newValue }) {
     return;
   }
 
-  localStorageCache.set(key, jsonParseAndFreeze(newValue as string));
+  // skip if newValue is null
+  if (newValue === null) {
+    return;
+  }
+
+  localStorageCache.set(key, jsonParseAndFreeze(newValue));
 });
 
 export default function localStorageDecoratorFactory(
-  target: unknown,
-  propertyKey: PropertyKey
-): void;
-
-export default function localStorageDecoratorFactory(
-  customLocalStorageKey: string
-): (
-  target: unknown,
-  propertyKey: PropertyKey,
-  descriptor: PropertyDescriptorInit
-) => void;
-
-export default function localStorageDecoratorFactory(
-  ...args: [unknown, PropertyKey, PropertyDescriptorInit]
+  ...args: [string] | [unknown, PropertyKey, PropertyDescriptorInit]
 ) {
   const isDirectDecoratorInvocation = isElementDescriptor(...args);
   const customLocalStorageKey = isDirectDecoratorInvocation
@@ -79,7 +71,9 @@ export default function localStorageDecoratorFactory(
   }
 
   return isDirectDecoratorInvocation
-    ? localStorageDecorator(...args)
+    ? localStorageDecorator(
+        ...(args as Parameters<typeof localStorageDecorator>)
+      )
     : localStorageDecorator;
 }
 
@@ -98,10 +92,9 @@ export function initalizeLocalStorageKey(key: string) {
     managedKeys.add(key);
 
     const item = window.localStorage.getItem(key);
-    if (item === null) {
-      throw new Error();
+    if (item !== null) {
+      localStorageCache.set(key, jsonParseAndFreeze(item));
     }
-    localStorageCache.set(key, jsonParseAndFreeze(item));
   }
 }
 
@@ -110,7 +103,7 @@ export function initalizeLocalStorageKey(key: string) {
 // Borrowed from the Ember Data source code:
 // https://github.com/emberjs/data/blob/22a8f20e2f11ed82c85160944e976073dc530d8b/packages/model/addon/-private/util.ts#L5
 function isElementDescriptor(
-  ...args: [unknown, PropertyKey, PropertyDescriptor]
+  ...args: Parameters<typeof localStorageDecoratorFactory>
 ): boolean {
   const [maybeTarget, maybeKey, maybeDescriptor] = args;
 
