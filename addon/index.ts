@@ -1,6 +1,7 @@
 import { TrackedMap } from 'tracked-maps-and-sets';
 
 type PropertyDescriptorInit = PropertyDescriptor & { initializer: () => void };
+type DecoratorArgs = [unknown, PropertyKey, PropertyDescriptorInit?];
 
 const managedKeys = new Set();
 const localStorageCache = new TrackedMap();
@@ -33,16 +34,22 @@ window.addEventListener('storage', function ({ key, newValue }) {
 });
 
 export default function localStorageDecoratorFactory(
-  ...args: [string] | [unknown, PropertyKey, PropertyDescriptorInit]
-) {
+  ...args: DecoratorArgs
+): void;
+
+export default function localStorageDecoratorFactory(
+  customLocalStorageKey: string
+): (...args: DecoratorArgs) => void;
+
+export default function localStorageDecoratorFactory(
+  ...args: [string] | DecoratorArgs
+): PropertyDescriptor | ((...args: DecoratorArgs) => void) {
   const isDirectDecoratorInvocation = isElementDescriptor(...args);
   const customLocalStorageKey = isDirectDecoratorInvocation
     ? undefined
     : args[0];
 
-  function localStorageDecorator(
-    ...[target, key, descriptor]: [unknown, PropertyKey, PropertyDescriptorInit]
-  ) {
+  function localStorageDecorator(...[target, key, descriptor]: DecoratorArgs) {
     const localStorageKey = customLocalStorageKey ?? key;
 
     initalizeLocalStorageKey(localStorageKey as string);
@@ -71,9 +78,7 @@ export default function localStorageDecoratorFactory(
   }
 
   return isDirectDecoratorInvocation
-    ? localStorageDecorator(
-        ...(args as Parameters<typeof localStorageDecorator>)
-      )
+    ? localStorageDecorator(...(args as DecoratorArgs))
     : localStorageDecorator;
 }
 
@@ -102,9 +107,7 @@ export function initalizeLocalStorageKey(key: string) {
 //
 // Borrowed from the Ember Data source code:
 // https://github.com/emberjs/data/blob/22a8f20e2f11ed82c85160944e976073dc530d8b/packages/model/addon/-private/util.ts#L5
-function isElementDescriptor(
-  ...args: Parameters<typeof localStorageDecoratorFactory>
-): boolean {
+function isElementDescriptor(...args: [string] | DecoratorArgs): boolean {
   const [maybeTarget, maybeKey, maybeDescriptor] = args;
 
   return (
