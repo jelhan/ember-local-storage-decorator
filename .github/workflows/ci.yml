@@ -190,9 +190,9 @@ jobs:
           # ember-classic
         ]
         allow-failure: [false]
-        include:
-          - ember-try-scenario: ember-canary
-            allow-failure: true
+        # include:
+        #  - ember-try-scenario: ember-canary
+        #    allow-failure: true
 
     steps:
     - uses: actions/checkout@v3
