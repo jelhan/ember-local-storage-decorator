@@ -7,9 +7,8 @@ Decorator to use `localStorage` in Ember Octane.
 Compatibility
 ------------------------------------------------------------------------------
 
-* Ember.js v3.28 or above
-* Ember CLI v3.28 or above
-* Node.js v14 or above
+- Ember.js v5.8 or above
+- Embroider or ember-auto-import v2
 
 
 Installation
@@ -18,7 +17,6 @@ Installation
 ```
 ember install ember-local-storage-decorator
 ```
-
 
 Usage
 ------------------------------------------------------------------------------
@@ -145,11 +143,11 @@ often shared between test jobs, you need to manual reinitialize a local
 storage key in tests.
 
 ```js
-import { initalizeLocalStorageKey } from 'ember-local-storage-decorator';
+import { initializeLocalStorageKey } from 'ember-local-storage-decorator';
 
 test('some code relying on a value in local storage', function() {
   window.localStorage.setItem('foo', 'bar');
-  initalizeLocalStorageKey('foo');
+  initializeLocalStorageKey('foo');
 });
 ```
 

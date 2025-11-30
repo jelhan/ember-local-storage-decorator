@@ -1,0 +1,7 @@
+autoInstallPeers: false
+
+onlyBuiltDependencies:
+  - core-js
+  - esbuild
+
+resolvePeersFromWorkspaceRoot: false
