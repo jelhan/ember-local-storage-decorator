@@ -20,6 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -51,7 +53,7 @@ jobs:
       - id: set-matrix
         run: |
            echo "matrix=$(pnpm -s dlx @embroider/try list)" >> $GITHUB_OUTPUT
-          
+
 
   floating:
     name: "Floating Dependencies"
@@ -89,11 +91,11 @@ jobs:
       - name: Apply Scenario
         run: |
            pnpm dlx @embroider/try apply ${{ matrix.name }}
-          
+
       - name: Install Dependencies
         run: pnpm install --no-lockfile
       - name: Run Tests
         run: |
           pnpm test
-          
+
         env: ${{ matrix.env }}
