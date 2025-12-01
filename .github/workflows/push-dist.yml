@@ -11,6 +11,9 @@ on:
       - main
       - master
 
+env:
+  PNPM_VERSION: 10
+
 jobs:
   push-dist:
     name: Push dist
@@ -22,6 +25,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
