@@ -5,7 +5,7 @@ import type {
 import { TrackedMap } from 'tracked-built-ins';
 
 const managedKeys = new Set();
-const localStorageCache = new TrackedMap(new Map());
+const localStorageCache = new TrackedMap<string, unknown>(new Map());
 
 // like JSON.parse() but all returned objects are frozen
 function jsonParseAndFreeze(json: string | null | undefined): unknown {
@@ -28,6 +28,10 @@ function jsonParseAndFreeze(json: string | null | undefined): unknown {
 window.addEventListener('storage', function ({ key, newValue }: StorageEvent) {
   // skip changes to other keys
   if (!managedKeys.has(key)) {
+    return;
+  }
+
+  if (typeof key !== 'string') {
     return;
   }
 
