@@ -2,10 +2,10 @@ import type {
   DecoratorPropertyDescriptor,
   ElementDescriptor,
 } from '@ember/-internals/metal';
-import { trackedMap } from '@ember/reactive/collections';
+import { TrackedMap } from 'tracked-built-ins';
 
 const managedKeys = new Set();
-const localStorageCache = trackedMap();
+const localStorageCache = new TrackedMap(new Map());
 
 // like JSON.parse() but all returned objects are frozen
 function jsonParseAndFreeze(json: string | null | undefined): unknown {
@@ -25,7 +25,7 @@ function jsonParseAndFreeze(json: string | null | undefined): unknown {
 }
 
 // register event lister to update local state on local storage changes
-window.addEventListener('storage', function ({ key, newValue }) {
+window.addEventListener('storage', function ({ key, newValue }: StorageEvent) {
   // skip changes to other keys
   if (!managedKeys.has(key)) {
     return;
