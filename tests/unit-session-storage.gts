@@ -2,23 +2,23 @@
 import { module, test } from 'qunit';
 import { setupTest } from 'ember-qunit';
 import {
-  localStorage,
-  clearLocalStorageCache,
-  initializeLocalStorageKey,
+  sessionStorage,
+  clearSessionStorageCache,
+  initializeSessionStorageKey,
 } from '#src/index.ts';
 
-module('Unit | Decorator | @localStorage', function (hooks) {
+module('Unit | Decorator | @sessionStorage', function (hooks) {
   setupTest(hooks);
 
   hooks.beforeEach(function () {
-    window.localStorage.clear();
-    clearLocalStorageCache();
+    window.sessionStorage.clear();
+    clearSessionStorageCache();
   });
 
   module('default values', function () {
     test('it defaults to null', function (assert) {
       class TestClass {
-        @localStorage foo: any;
+        @sessionStorage foo: any;
       }
 
       const klass = new TestClass();
@@ -28,7 +28,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
 
     test('user can provide a default value', function (assert) {
       class TestClass {
-        @localStorage foo: any = 'bar';
+        @sessionStorage foo: any = 'bar';
       }
       const klass = new TestClass();
 
@@ -39,7 +39,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
   module('optional parentheses', function () {
     test('it can be invoked with parentheses', function (assert) {
       class TestClass {
-        @localStorage() foo: any = 'with parentheses';
+        @sessionStorage() foo: any = 'with parentheses';
       }
       const klass = new TestClass();
 
@@ -48,11 +48,11 @@ module('Unit | Decorator | @localStorage', function (hooks) {
   });
 
   module('getter', function () {
-    test('picks up simple value from local storage', function (assert) {
-      window.localStorage.setItem('foo', JSON.stringify('baz'));
+    test('picks up simple value from session storage', function (assert) {
+      window.sessionStorage.setItem('foo', JSON.stringify('baz'));
 
       class TestClass {
-        @localStorage foo: any;
+        @sessionStorage foo: any;
       }
 
       const klass = new TestClass();
@@ -60,11 +60,11 @@ module('Unit | Decorator | @localStorage', function (hooks) {
       assert.equal(klass.foo, 'baz');
     });
 
-    test('picks up complex value from local storage', function (assert) {
-      window.localStorage.setItem('foo', JSON.stringify([{ bar: 'baz' }]));
+    test('picks up complex value from session storage', function (assert) {
+      window.sessionStorage.setItem('foo', JSON.stringify([{ bar: 'baz' }]));
 
       class TestClass {
-        @localStorage foo: any;
+        @sessionStorage foo: any;
       }
 
       const klass = new TestClass();
@@ -77,11 +77,11 @@ module('Unit | Decorator | @localStorage', function (hooks) {
       );
     });
 
-    test('supports custom local storage key', function (assert) {
-      window.localStorage.setItem('bar', JSON.stringify('baz'));
+    test('supports custom session storage key', function (assert) {
+      window.sessionStorage.setItem('bar', JSON.stringify('baz'));
 
       class TestClassWithCustomKey {
-        @localStorage('bar') foo: any;
+        @sessionStorage('bar') foo: any;
       }
 
       const klass = new TestClassWithCustomKey();
@@ -93,7 +93,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
   module('setter', function () {
     test('user can set a simple value', function (assert) {
       class TestClass {
-        @localStorage foo: any;
+        @sessionStorage foo: any;
       }
 
       const klass = new TestClass();
@@ -104,7 +104,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
 
     test('user can set a complex value', function (assert) {
       class TestClass {
-        @localStorage foo: any;
+        @sessionStorage foo: any;
       }
 
       const klass = new TestClass();
@@ -113,20 +113,20 @@ module('Unit | Decorator | @localStorage', function (hooks) {
       assert.deepEqual(klass.foo, [{ bar: 'baz' }]);
     });
 
-    test('persists simple value in local storage', function (assert) {
+    test('persists simple value in session storage', function (assert) {
       class TestClass {
-        @localStorage foo: any;
+        @sessionStorage foo: any;
       }
 
       const klass = new TestClass();
 
       klass.foo = 'baz';
-      assert.equal(JSON.parse(window.localStorage.getItem('foo')!), 'baz');
+      assert.equal(JSON.parse(window.sessionStorage.getItem('foo')!), 'baz');
     });
 
-    test('persists complex value in local storage', function (assert) {
+    test('persists complex value in session storage', function (assert) {
       class TestClass {
-        @localStorage foo: any;
+        @sessionStorage foo: any;
       }
 
       const klass = new TestClass();
@@ -134,7 +134,10 @@ module('Unit | Decorator | @localStorage', function (hooks) {
       const value = [{ bar: 'baz' }];
 
       klass.foo = value;
-      assert.deepEqual(JSON.parse(window.localStorage.getItem('foo')!), value);
+      assert.deepEqual(
+        JSON.parse(window.sessionStorage.getItem('foo')!),
+        value,
+      );
       assert.ok(Object.isFrozen(klass.foo), 'object is frozen');
       assert.ok(
         Object.isFrozen((klass.foo as unknown[])[0]),
@@ -144,23 +147,23 @@ module('Unit | Decorator | @localStorage', function (hooks) {
       assert.notOk(Object.isFrozen(value), 'original object is not mutated');
     });
 
-    test('supports custom local storage key', function (assert) {
+    test('supports custom session storage key', function (assert) {
       class TestClassWithCustomKey {
-        @localStorage('bar') foo: any;
+        @sessionStorage('bar') foo: any;
       }
 
       const klass = new TestClassWithCustomKey();
 
       klass.foo = 'baz';
 
-      assert.equal(JSON.parse(window.localStorage.getItem('bar')!), 'baz');
+      assert.equal(JSON.parse(window.sessionStorage.getItem('bar')!), 'baz');
     });
   });
 
   module('external changes', function () {
     test('picks up changes caused by another class', function (assert) {
       class TestClass {
-        @localStorage foo: any;
+        @sessionStorage foo: any;
       }
 
       const klassA = new TestClass();
@@ -172,7 +175,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
 
     test('picks up changes caused by other tabs', function (assert) {
       class TestClass {
-        @localStorage foo: any;
+        @sessionStorage foo: any;
       }
       const klass = new TestClass();
 
@@ -181,7 +184,7 @@ module('Unit | Decorator | @localStorage', function (hooks) {
 
       // act: simulate a change in another tab
       const newValue = JSON.stringify('bar');
-      window.localStorage.setItem('foo', newValue);
+      window.sessionStorage.setItem('foo', newValue);
       window.dispatchEvent(
         new StorageEvent('storage', { key: 'foo', oldValue: null, newValue }),
       );
@@ -192,22 +195,22 @@ module('Unit | Decorator | @localStorage', function (hooks) {
   });
 
   module('test support', function () {
-    test('developer can reinitialize a local storage key in tests', function (assert) {
+    test('developer can reinitialize a session storage key in tests', function (assert) {
       // create a class, which will be used between multiple tests runs
       class Foo {
-        @localStorage foo: undefined | string;
+        @sessionStorage foo: undefined | string;
       }
 
       // use the class in first test
       assert.equal(new Foo().foo, null);
 
-      // reset local storage cache as developer is expected to do in beforeEach hook
-      window.localStorage.clear();
-      clearLocalStorageCache();
+      // reset session storage cache as developer is expected to do in beforeEach hook
+      window.sessionStorage.clear();
+      clearSessionStorageCache();
 
-      // arrange local storage value for another test
-      window.localStorage.setItem('foo', JSON.stringify('bar'));
-      initializeLocalStorageKey('foo');
+      // arrange session storage value for another test
+      window.sessionStorage.setItem('foo', JSON.stringify('bar'));
+      initializeSessionStorageKey('foo');
 
       // use the class in second test
       assert.equal(new Foo().foo, 'bar');
