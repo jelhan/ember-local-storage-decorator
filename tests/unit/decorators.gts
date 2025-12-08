@@ -8,8 +8,8 @@ import {
   clearSessionStorageCache,
   initializeLocalStorageKey,
   initializeSessionStorageKey,
+  DEFAULT_PREFIX,
 } from '#src/index.ts';
-import { DEFAULT_PREFIX } from '#src/TrackedStorage.ts';
 
 const storageTypes = [
   {

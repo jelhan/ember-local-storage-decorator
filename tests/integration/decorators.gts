@@ -7,8 +7,8 @@ import {
   sessionStorage,
   clearLocalStorageCache,
   clearSessionStorageCache,
+  DEFAULT_PREFIX,
 } from '#src/index.ts';
-import { DEFAULT_PREFIX } from '#src/TrackedStorage.ts';
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';

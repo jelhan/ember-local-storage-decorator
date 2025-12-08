@@ -1,8 +1,7 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { click, render } from '@ember/test-helpers';
-import { TrackedStorage } from '#src/index.ts';
-import { DEFAULT_PREFIX } from '#src/TrackedStorage.ts';
+import { TrackedStorage, DEFAULT_PREFIX } from '#src/index.ts';
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 

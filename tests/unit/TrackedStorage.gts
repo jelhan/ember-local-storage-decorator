@@ -1,7 +1,6 @@
 import { module, test } from 'qunit';
 import { setupTest } from 'ember-qunit';
-import { TrackedStorage } from '#src/index.ts';
-import { DEFAULT_PREFIX } from '#src/TrackedStorage.ts';
+import { TrackedStorage, DEFAULT_PREFIX } from '#src/index.ts';
 
 const storageTypes = [
   {
