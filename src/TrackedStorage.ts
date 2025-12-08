@@ -17,6 +17,20 @@ function jsonParseAndFreeze(json: string | null | undefined): unknown {
   return parsed;
 }
 
+export const DEFAULT_PREFIX = '__tracked_storage__';
+
+// Module-level shared caches and managed keys, keyed by storage+prefix
+const sharedCaches = new Map<string, TrackedMap<string, unknown>>();
+const sharedManagedKeys = new Map<string, Set<string>>();
+
+// Track which storage types have event listeners registered
+const listenerRegistered = new WeakSet<Storage>();
+
+// Get a unique key for cache lookup
+function getCacheKey(storage: Storage, prefix: string): string {
+  return `${storage === window.localStorage ? 'local' : 'session'}:${prefix}`;
+}
+
 /**
  * A tracked wrapper around the Web Storage API (localStorage or sessionStorage).
  * All get/set operations are reactive and will trigger Ember's reactivity system.
@@ -33,54 +47,85 @@ function jsonParseAndFreeze(json: string | null | undefined): unknown {
  * const count = storage.getItem('count'); // 42
  * ```
  */
-export const DEFAULT_PREFIX = '__tracked_storage__';
-
 export class TrackedStorage {
   #prefix: string;
   #storage: Storage;
-  #cache = new TrackedMap<string, unknown>(new Map());
-  #managedKeys = new Set<string>();
+  #cache: TrackedMap<string, unknown>;
+  #managedKeys: Set<string>;
+  #cacheKey: string;
 
   constructor(storage: Storage, prefix?: string) {
     this.#storage = storage;
     this.#prefix = prefix ?? DEFAULT_PREFIX;
+    this.#cacheKey = getCacheKey(storage, this.#prefix);
 
-    // Initialize cache with existing storage values that match our prefix
+    // Get or create shared cache and managed keys for this storage+prefix combination
+    if (!sharedCaches.has(this.#cacheKey)) {
+      const cache = new TrackedMap<string, unknown>(new Map());
+      const managedKeys = new Set<string>();
+
+      sharedCaches.set(this.#cacheKey, cache);
+      sharedManagedKeys.set(this.#cacheKey, managedKeys);
+    }
+
+    this.#cache = sharedCaches.get(this.#cacheKey)!;
+    this.#managedKeys = sharedManagedKeys.get(this.#cacheKey)!;
+
+    // Sync cache with storage: remove cached keys that no longer exist in storage
+    for (const cachedKey of Array.from(this.#managedKeys)) {
+      if (storage.getItem(cachedKey) === null) {
+        this.#cache.delete(cachedKey);
+        this.#managedKeys.delete(cachedKey);
+      }
+    }
+
+    // Add any new keys from storage that match our prefix
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
-      if (key && key.startsWith(`${this.#prefix}:`)) {
+      if (
+        key &&
+        key.startsWith(`${this.#prefix}:`) &&
+        !this.#managedKeys.has(key)
+      ) {
         this.#cache.set(key, jsonParseAndFreeze(storage.getItem(key)));
         this.#managedKeys.add(key);
       }
     }
 
-    // Listen for storage events from other tabs/windows
-    window.addEventListener('storage', (event: StorageEvent) => {
-      if (!event.key) {
-        return;
-      }
+    // Setup storage event listener once per storage type
+    if (!listenerRegistered.has(storage)) {
+      listenerRegistered.add(storage);
 
-      // Ensure this event is for our storage area
-      if (event.storageArea !== null && event.storageArea !== storage) {
-        return;
-      }
+      window.addEventListener('storage', (event: StorageEvent) => {
+        if (!event.key || event.storageArea !== storage) {
+          return;
+        }
 
-      // Only track keys we're managing
-      if (!this.#managedKeys.has(event.key)) {
-        return;
-      }
+        // Determine the storage type prefix for filtering
+        const storagePrefix =
+          storage === window.localStorage ? 'local:' : 'session:';
 
-      // Update cache
-      const newValue = jsonParseAndFreeze(event.newValue);
-      this.#cache.set(event.key, newValue);
+        // Update all caches for this storage type that have this key
+        for (const [cacheKey, managedKeys] of sharedManagedKeys.entries()) {
+          // Only update caches for the same storage type
+          if (
+            cacheKey.startsWith(storagePrefix) &&
+            managedKeys.has(event.key)
+          ) {
+            const cache = sharedCaches.get(cacheKey)!;
+            const newValue = jsonParseAndFreeze(event.newValue);
+            cache.set(event.key, newValue);
 
-      // Track or untrack key based on whether it was added or removed
-      if (newValue !== null) {
-        this.#managedKeys.add(event.key);
-      } else {
-        this.#managedKeys.delete(event.key);
-      }
-    });
+            // Track or untrack key based on whether it was added or removed
+            if (newValue !== null) {
+              managedKeys.add(event.key);
+            } else {
+              managedKeys.delete(event.key);
+            }
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -164,12 +209,14 @@ export class TrackedStorage {
    * Clear all items from storage that match our prefix.
    */
   clear = (): void => {
-    this.#cache.clear();
+    // Create a copy of keys to avoid modification during iteration
+    const keysToRemove = Array.from(this.#managedKeys);
 
-    for (const key of this.#managedKeys) {
+    for (const key of keysToRemove) {
       this.#storage.removeItem(key);
     }
 
+    this.#cache.clear();
     this.#managedKeys.clear();
   };
 
