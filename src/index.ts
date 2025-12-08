@@ -1,13 +1,13 @@
-export { default as localStorage } from './localStorage.ts';
-export { default as sessionStorage } from './sessionStorage.ts';
+export { default as localStorage } from './decorator/localStorage.ts';
+export { default as sessionStorage } from './decorator/sessionStorage.ts';
 export {
   clearLocalStorageCache,
   initializeLocalStorageKey,
-} from './localStorage.ts';
+} from './decorator/localStorage.ts';
 export {
   clearSessionStorageCache,
   initializeSessionStorageKey,
-} from './sessionStorage.ts';
+} from './decorator/sessionStorage.ts';
 export { TrackedStorage, DEFAULT_PREFIX } from './TrackedStorage.ts';
 
 // Pre-instantiated TrackedStorage instances for convenience

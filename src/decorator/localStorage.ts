@@ -1,5 +1,5 @@
 import type { ElementDescriptor } from '@ember/-internals/metal';
-import { createStorageManager } from './storage/manager.ts';
+import { createStorageManager } from './manager.ts';
 
 const { decoratorFactory, clearCache, initializeKey } = createStorageManager(
   window.localStorage,
