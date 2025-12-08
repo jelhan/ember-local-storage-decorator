@@ -28,12 +28,11 @@ export type StorageManager = {
 };
 
 export function createStorageManager(storage: Storage): StorageManager {
-  // Use TrackedStorage as the underlying primitive
   const trackedStorage = new TrackedStorage(storage);
 
   function initializeKey(key: string) {
     // TrackedStorage automatically initializes keys on access, but we can
-    // preemptively access it to ensure it's in the cache
+    // pre-emptively access it to ensure it's in the cache
     trackedStorage.getItem(key);
   }
 

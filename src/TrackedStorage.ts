@@ -123,7 +123,6 @@ export class TrackedStorage {
     // Key exists in storage but not cache - this shouldn't normally happen
     // since we initialize the cache in constructor, but handle it gracefully
     const value = jsonParseAndFreeze(rawValue);
-    // Cache the value for future accesses
     this.#cache.set(prefixedKey, value);
     return value as T | null;
   };
@@ -165,15 +164,12 @@ export class TrackedStorage {
    * Clear all items from storage that match our prefix.
    */
   clear = (): void => {
-    // Clear cache
     this.#cache.clear();
 
-    // Remove all managed keys from storage
     for (const key of this.#managedKeys) {
       this.#storage.removeItem(key);
     }
 
-    // Clear the managed keys set
     this.#managedKeys.clear();
   };
 

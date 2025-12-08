@@ -5,8 +5,6 @@ const { decoratorFactory, clearCache, initializeKey } = createStorageManager(
   window.sessionStorage,
 );
 
-// Mirror the same overloads as the localStorage decorator so the interface
-// is identical for consumers.
 export default function sessionStorageDecoratorFactory(
   ...args: ElementDescriptor
 ): void;

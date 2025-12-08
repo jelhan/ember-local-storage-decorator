@@ -5,7 +5,6 @@ const { decoratorFactory, clearCache, initializeKey } = createStorageManager(
   window.localStorage,
 );
 
-// Keep the original decorator overloads so TS consumers keep the same typing
 export default function localStorageDecoratorFactory(
   ...args: ElementDescriptor
 ): void;
