@@ -1,13 +1,13 @@
 {
   "name": "ember-local-storage-decorator",
-  "version": "0.0.0",
-  "description": "The default blueprint for Embroider v2 addons.",
+  "version": "0.3.0",
+  "description": "Decorator to use localStorage in Ember Octane",
   "keywords": [
     "ember-addon"
   ],
-  "repository": "",
+  "repository": "https://github.com/jelhan/ember-local-storage-decorator.git",
   "license": "MIT",
-  "author": "",
+  "author": "Jeldrik Hanschke",
   "imports": {
     "#src/*": "./src/*"
   },
@@ -26,7 +26,8 @@
   "files": [
     "addon-main.cjs",
     "declarations",
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "build": "rollup --config",
