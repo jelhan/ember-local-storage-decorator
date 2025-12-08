@@ -26,19 +26,6 @@ const compatDeps = {
 export default {
   scenarios: [
     {
-      name: 'ember-lts-5.8',
-      npm: {
-        devDependencies: {
-          'ember-source': '~5.8.0',
-          ...compatDeps,
-        },
-      },
-      env: {
-        ENABLE_COMPAT_BUILD: true,
-      },
-      files: compatFiles,
-    },
-    {
       name: 'ember-lts-5.12',
       npm: {
         devDependencies: {
@@ -56,6 +43,14 @@ export default {
       npm: {
         devDependencies: {
           'ember-source': 'npm:ember-source@~6.4.0',
+        },
+      },
+    },
+    {
+      name: 'ember-lts-6.8',
+      npm: {
+        devDependencies: {
+          'ember-source': 'npm:ember-source@~6.8.0',
         },
       },
     },

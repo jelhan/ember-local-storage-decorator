@@ -7,7 +7,7 @@ Decorator to use `localStorage` in Ember Octane.
 Compatibility
 ------------------------------------------------------------------------------
 
-- Ember.js v5.8 or above
+- Ember.js v5.12 or above
 - Embroider or ember-auto-import v2
 
 
