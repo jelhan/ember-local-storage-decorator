@@ -25,10 +25,10 @@ function jsonParseAndFreeze(json: string | null | undefined): unknown {
  * @example
  * ```js
  * const storage = new TrackedStorage(window.localStorage);
- * 
+ *
  * storage.setItem('user', { name: 'Alice' });
  * const user = storage.getItem('user'); // { name: 'Alice' }
- * 
+ *
  * storage.setItem('count', 42);
  * const count = storage.getItem('count'); // 42
  * ```
@@ -46,48 +46,66 @@ export class TrackedStorage {
     this.#prefix = prefix ?? DEFAULT_PREFIX;
 
     // Initialize cache with existing storage values that match our prefix
-    const prefixWithColon = `${this.#prefix}:`;
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
-      if (key && key.startsWith(prefixWithColon)) {
+      if (key && this.#matchesPrefix(key)) {
         this.#cache.set(key, jsonParseAndFreeze(storage.getItem(key)));
       }
     }
 
     // Listen for storage events from other tabs/windows
-    window.addEventListener(
-      'storage',
-      (event: StorageEvent) => {
-        if (!event.key) {
-          return;
-        }
+    window.addEventListener('storage', (event: StorageEvent) => {
+      if (!event.key) {
+        return;
+      }
 
-        // Ensure this event is for our storage area
-        if (event.storageArea !== null && event.storageArea !== storage) {
-          return;
-        }
+      // Ensure this event is for our storage area
+      if (event.storageArea !== null && event.storageArea !== storage) {
+        return;
+      }
 
-        // Only track keys that match our prefix
-        if (!event.key.startsWith(prefixWithColon)) {
-          return;
-        }
+      // Only track keys that match our prefix
+      if (!this.#matchesPrefix(event.key)) {
+        return;
+      }
 
-        // Update cache
-        this.#cache.set(event.key, jsonParseAndFreeze(event.newValue));
-      },
-    );
+      // Update cache
+      this.#cache.set(event.key, jsonParseAndFreeze(event.newValue));
+    });
   }
+
+  /**
+   * Build the full storage key with prefix
+   */
+  #buildKey = (key: string): string => {
+    return `${this.#prefix}:${key}`;
+  };
+
+  /**
+   * Check if a key matches our prefix pattern
+   */
+  #matchesPrefix = (key: string): boolean => {
+    return key.startsWith(`${this.#prefix}:`);
+  };
+
+  /**
+   * Strip the prefix from a key
+   */
+  #stripPrefix = (key: string): string => {
+    const prefix = `${this.#prefix}:`;
+    return key.startsWith(prefix) ? key.slice(prefix.length) : key;
+  };
 
   /**
    * Get an item from storage. Returns the parsed value or null if not found.
    * Objects and arrays are deep frozen to prevent mutation.
-   * 
+   *
    * Note: This method accesses the cache for reactivity. Values that don't exist
    * in storage will return null without being cached to avoid tracking violations.
    */
   getItem = <T = unknown>(key: string): T | null => {
-    const prefixedKey = `${this.#prefix}:${key}`;
-    
+    const prefixedKey = this.#buildKey(key);
+
     // Check if the key is tracked in our cache
     if (this.#cache.has(prefixedKey)) {
       return this.#cache.get(prefixedKey) as T | null;
@@ -119,7 +137,7 @@ export class TrackedStorage {
       return;
     }
 
-    const prefixedKey = `${this.#prefix}:${key}`;
+    const prefixedKey = this.#buildKey(key);
     const json = JSON.stringify(value);
 
     // Update cache with frozen copy
@@ -133,7 +151,7 @@ export class TrackedStorage {
    * Remove an item from storage.
    */
   removeItem = (key: string): void => {
-    const prefixedKey = `${this.#prefix}:${key}`;
+    const prefixedKey = this.#buildKey(key);
     this.#cache.delete(prefixedKey);
     this.#storage.removeItem(prefixedKey);
   };
@@ -144,17 +162,16 @@ export class TrackedStorage {
   clear = (): void => {
     // Clear cache
     this.#cache.clear();
-    
+
     // Clear only items with our prefix from storage
-    const prefixWithColon = `${this.#prefix}:`;
     const keysToRemove: string[] = [];
     for (let i = 0; i < this.#storage.length; i++) {
       const key = this.#storage.key(i);
-      if (key && key.startsWith(prefixWithColon)) {
+      if (key && this.#matchesPrefix(key)) {
         keysToRemove.push(key);
       }
     }
-    
+
     for (const key of keysToRemove) {
       this.#storage.removeItem(key);
     }
@@ -166,12 +183,11 @@ export class TrackedStorage {
    */
   key = (index: number): string | null => {
     let count = 0;
-    const prefixWithColon = `${this.#prefix}:`;
     for (let i = 0; i < this.#storage.length; i++) {
       const key = this.#storage.key(i);
-      if (key && key.startsWith(prefixWithColon)) {
+      if (key && this.#matchesPrefix(key)) {
         if (count === index) {
-          return key.slice(prefixWithColon.length);
+          return this.#stripPrefix(key);
         }
         count++;
       }
@@ -184,10 +200,9 @@ export class TrackedStorage {
    */
   get length(): number {
     let count = 0;
-    const prefixWithColon = `${this.#prefix}:`;
     for (let i = 0; i < this.#storage.length; i++) {
       const key = this.#storage.key(i);
-      if (key && key.startsWith(prefixWithColon)) {
+      if (key && this.#matchesPrefix(key)) {
         count++;
       }
     }

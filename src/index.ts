@@ -8,7 +8,7 @@ export {
   clearSessionStorageCache,
   initializeSessionStorageKey,
 } from './sessionStorage.ts';
-export { TrackedStorage, DEFAULT_PREFIX } from './TrackedStorage.ts';
+export { TrackedStorage } from './TrackedStorage.ts';
 
 // Pre-instantiated TrackedStorage instances for convenience
 import { TrackedStorage } from './TrackedStorage.ts';
