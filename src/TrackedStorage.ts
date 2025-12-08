@@ -235,9 +235,10 @@ export class TrackedStorage {
 
   /**
    * Get the number of items in storage that match our prefix.
+   * Accesses the TrackedMap to ensure reactivity.
    */
   get length(): number {
-    return this.#managedKeys.size;
+    return this.#cache.size;
   }
 
   /**

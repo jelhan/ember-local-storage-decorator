@@ -91,6 +91,198 @@ storageTypes.forEach(({ name, storage: windowStorage }) => {
       });
     });
 
+    module('shared cache', function () {
+      test('multiple instances with same storage and prefix share cache', function (assert) {
+        const storage1 = new TrackedStorage(windowStorage);
+        const storage2 = new TrackedStorage(windowStorage);
+
+        storage1.setItem('shared_key', 'value1');
+
+        // storage2 should immediately see the value without storage event
+        assert.equal(
+          storage2.getItem('shared_key'),
+          'value1',
+          'second instance sees value from first instance',
+        );
+
+        storage2.setItem('shared_key', 'value2');
+
+        // storage1 should immediately see the updated value
+        assert.equal(
+          storage1.getItem('shared_key'),
+          'value2',
+          'first instance sees update from second instance',
+        );
+      });
+
+      test('instances with different prefixes do not share cache', function (assert) {
+        const storage1 = new TrackedStorage(windowStorage, 'prefix1');
+        const storage2 = new TrackedStorage(windowStorage, 'prefix2');
+
+        storage1.setItem('key', 'value1');
+        storage2.setItem('key', 'value2');
+
+        assert.equal(
+          storage1.getItem('key'),
+          'value1',
+          'prefix1 instance has its own value',
+        );
+        assert.equal(
+          storage2.getItem('key'),
+          'value2',
+          'prefix2 instance has its own value',
+        );
+
+        // Verify they created separate keys in underlying storage
+        assert.equal(
+          windowStorage.getItem('prefix1:key'),
+          JSON.stringify('value1'),
+          'prefix1 key exists in storage',
+        );
+        assert.equal(
+          windowStorage.getItem('prefix2:key'),
+          JSON.stringify('value2'),
+          'prefix2 key exists in storage',
+        );
+      });
+
+      test('localStorage and sessionStorage do not share cache', function (assert) {
+        const localStorage = new TrackedStorage(
+          window.localStorage,
+          'test_prefix',
+        );
+        const sessionStorage = new TrackedStorage(
+          window.sessionStorage,
+          'test_prefix',
+        );
+
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+
+        localStorage.setItem('key', 'local_value');
+        sessionStorage.setItem('key', 'session_value');
+
+        assert.equal(
+          localStorage.getItem('key'),
+          'local_value',
+          'localStorage has its own value',
+        );
+        assert.equal(
+          sessionStorage.getItem('key'),
+          'session_value',
+          'sessionStorage has its own value',
+        );
+      });
+
+      test('new instance syncs with storage state when cache exists', function (assert) {
+        const storage1 = new TrackedStorage(windowStorage);
+
+        storage1.setItem('key1', 'value1');
+        storage1.setItem('key2', 'value2');
+
+        // Manually clear underlying storage (simulating external clear)
+        windowStorage.clear();
+
+        // Create new instance - should sync with empty storage
+        const storage2 = new TrackedStorage(windowStorage);
+
+        assert.equal(
+          storage2.getItem('key1'),
+          null,
+          'new instance does not see cleared key1',
+        );
+        assert.equal(
+          storage2.getItem('key2'),
+          null,
+          'new instance does not see cleared key2',
+        );
+        assert.equal(storage2.length, 0, 'new instance has zero length');
+
+        // storage1 should also reflect the cleared state due to shared cache
+        assert.equal(
+          storage1.getItem('key1'),
+          null,
+          'original instance also sees cleared state',
+        );
+        assert.equal(storage1.length, 0, 'original instance has zero length');
+      });
+
+      test('new instance picks up keys added externally', function (assert) {
+        const storage1 = new TrackedStorage(windowStorage);
+
+        // Manually add key to underlying storage (simulating external addition)
+        windowStorage.setItem(
+          `${DEFAULT_PREFIX}:external_key`,
+          JSON.stringify('external_value'),
+        );
+
+        // Create new instance - should pick up the external key
+        const storage2 = new TrackedStorage(windowStorage);
+
+        assert.equal(
+          storage2.getItem('external_key'),
+          'external_value',
+          'new instance sees externally added key',
+        );
+
+        // Original instance should also see it due to shared cache
+        assert.equal(
+          storage1.getItem('external_key'),
+          'external_value',
+          'original instance also sees externally added key',
+        );
+      });
+
+      test('clear on one instance clears shared cache', function (assert) {
+        const storage1 = new TrackedStorage(windowStorage);
+        const storage2 = new TrackedStorage(windowStorage);
+
+        storage1.setItem('key1', 'value1');
+        storage2.setItem('key2', 'value2');
+
+        assert.equal(storage1.length, 2, 'storage1 has 2 keys');
+        assert.equal(storage2.length, 2, 'storage2 has 2 keys');
+
+        storage1.clear();
+
+        assert.equal(storage1.length, 0, 'storage1 is empty after clear');
+        assert.equal(storage2.length, 0, 'storage2 is also empty');
+        assert.equal(
+          storage2.getItem('key1'),
+          null,
+          'storage2 does not see key1',
+        );
+        assert.equal(
+          storage2.getItem('key2'),
+          null,
+          'storage2 does not see key2',
+        );
+      });
+
+      test('managed keys do not pollute across different prefixes', function (assert) {
+        const storage1 = new TrackedStorage(windowStorage, 'prefix1');
+        const storage2 = new TrackedStorage(windowStorage, 'prefix2');
+
+        storage1.setItem('key1', 'value1');
+        storage1.setItem('key2', 'value2');
+        storage2.setItem('keyA', 'valueA');
+
+        assert.equal(storage1.length, 2, 'prefix1 has 2 keys');
+        assert.equal(storage2.length, 1, 'prefix2 has 1 key');
+
+        // key() should only return keys for the respective prefix
+        const storage1Keys = [storage1.key(0), storage1.key(1)].sort();
+        assert.deepEqual(
+          storage1Keys,
+          ['key1', 'key2'],
+          'prefix1 returns only its keys',
+        );
+
+        assert.equal(storage2.key(0), 'keyA', 'prefix2 returns only its key');
+        assert.equal(storage2.key(1), null, 'prefix2 has no second key');
+      });
+    });
+
     module('getItem', function () {
       test('returns null for non-existent keys', function (assert) {
         assert.equal(storage.getItem('nonexistent'), null);

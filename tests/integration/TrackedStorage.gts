@@ -274,5 +274,227 @@ storageTypes.forEach(({ name, storage: windowStorage }) => {
       assert.equal(storage.getItem('test'), null);
       assert.equal(windowStorage.getItem(`${DEFAULT_PREFIX}:test`), null);
     });
+
+    test('multiple instances sharing cache trigger reactivity in both', async function (assert) {
+      const storage1 = new TrackedStorage(windowStorage);
+      const storage2 = new TrackedStorage(windowStorage);
+
+      storage1.setItem('shared', 'initial');
+
+      class Component1 extends Component {
+        storage = storage1;
+
+        <template>
+          <div data-test-component1>{{this.storage.getItem "shared"}}</div>
+        </template>
+      }
+
+      class Component2 extends Component {
+        storage = storage2;
+
+        updateValue = () => {
+          this.storage.setItem('shared', 'updated by storage2');
+        };
+
+        <template>
+          <div data-test-component2>{{this.storage.getItem "shared"}}</div>
+          <button
+            type="button"
+            {{on "click" this.updateValue}}
+            data-test-update
+          ></button>
+        </template>
+      }
+
+      await render(
+        <template>
+          <Component1 />
+          <Component2 />
+        </template>,
+      );
+
+      // Both components should see the initial value
+      assert.dom('[data-test-component1]').hasText('initial');
+      assert.dom('[data-test-component2]').hasText('initial');
+
+      // Update via storage2
+      await click('[data-test-update]');
+
+      // Both components should immediately see the updated value
+      assert
+        .dom('[data-test-component1]')
+        .hasText('updated by storage2', 'component1 sees update from storage2');
+      assert
+        .dom('[data-test-component2]')
+        .hasText('updated by storage2', 'component2 sees its own update');
+    });
+
+    test('instances with different prefixes remain isolated in rendering', async function (assert) {
+      const storageA = new TrackedStorage(windowStorage, 'prefixA');
+      const storageB = new TrackedStorage(windowStorage, 'prefixB');
+
+      storageA.setItem('value', 'A');
+      storageB.setItem('value', 'B');
+
+      class ComponentA extends Component {
+        storage = storageA;
+
+        updateValue = () => {
+          this.storage.setItem('value', 'A updated');
+        };
+
+        <template>
+          <div data-test-a>{{this.storage.getItem "value"}}</div>
+          <button
+            type="button"
+            {{on "click" this.updateValue}}
+            data-test-update-a
+          ></button>
+        </template>
+      }
+
+      class ComponentB extends Component {
+        storage = storageB;
+
+        <template>
+          <div data-test-b>{{this.storage.getItem "value"}}</div>
+        </template>
+      }
+
+      await render(
+        <template>
+          <ComponentA />
+          <ComponentB />
+        </template>,
+      );
+
+      // Each component sees its own value
+      assert.dom('[data-test-a]').hasText('A');
+      assert.dom('[data-test-b]').hasText('B');
+
+      // Update storageA
+      await click('[data-test-update-a]');
+
+      // Only componentA should update
+      assert
+        .dom('[data-test-a]')
+        .hasText('A updated', 'prefixA component updated');
+      assert.dom('[data-test-b]').hasText('B', 'prefixB component unchanged');
+    });
+
+    test('removing item in one instance updates all components', async function (assert) {
+      const storage1 = new TrackedStorage(windowStorage);
+      const storage2 = new TrackedStorage(windowStorage);
+
+      storage1.setItem('removable', 'present');
+
+      class Component1 extends Component {
+        storage = storage1;
+
+        <template>
+          <div data-test-component1>{{this.storage.getItem "removable"}}</div>
+        </template>
+      }
+
+      class Component2 extends Component {
+        storage = storage2;
+
+        removeValue = () => {
+          this.storage.removeItem('removable');
+        };
+
+        <template>
+          <div data-test-component2>{{this.storage.getItem "removable"}}</div>
+          <button
+            type="button"
+            {{on "click" this.removeValue}}
+            data-test-remove
+          ></button>
+        </template>
+      }
+
+      await render(
+        <template>
+          <Component1 />
+          <Component2 />
+        </template>,
+      );
+
+      // Both components should see the value
+      assert.dom('[data-test-component1]').hasText('present');
+      assert.dom('[data-test-component2]').hasText('present');
+
+      // Remove via storage2
+      await click('[data-test-remove]');
+
+      // Both components should show empty (null renders as empty)
+      assert
+        .dom('[data-test-component1]')
+        .hasText('', 'component1 sees removal');
+      assert
+        .dom('[data-test-component2]')
+        .hasText('', 'component2 sees removal');
+    });
+
+    test('clear in one instance updates all components', async function (assert) {
+      const storage1 = new TrackedStorage(windowStorage);
+      const storage2 = new TrackedStorage(windowStorage);
+
+      storage1.setItem('key1', 'value1');
+      storage1.setItem('key2', 'value2');
+
+      class Component1 extends Component {
+        storage = storage1;
+
+        <template>
+          <div data-test-key1>{{this.storage.getItem "key1"}}</div>
+          <div data-test-key2>{{this.storage.getItem "key2"}}</div>
+          <div data-test-length1>{{this.storage.length}}</div>
+        </template>
+      }
+
+      class Component2 extends Component {
+        storage = storage2;
+
+        clearAll = () => {
+          this.storage.clear();
+        };
+
+        <template>
+          <div data-test-length2>{{this.storage.length}}</div>
+          <button
+            type="button"
+            {{on "click" this.clearAll}}
+            data-test-clear
+          ></button>
+        </template>
+      }
+
+      await render(
+        <template>
+          <Component1 />
+          <Component2 />
+        </template>,
+      );
+
+      // Initial state
+      assert.dom('[data-test-key1]').hasText('value1');
+      assert.dom('[data-test-key2]').hasText('value2');
+      assert.dom('[data-test-length1]').hasText('2');
+      assert.dom('[data-test-length2]').hasText('2');
+
+      // Clear via storage2
+      await click('[data-test-clear]');
+
+      // All components should reflect the cleared state
+      assert.dom('[data-test-key1]').hasText('', 'key1 cleared in component1');
+      assert.dom('[data-test-key2]').hasText('', 'key2 cleared in component1');
+      assert
+        .dom('[data-test-length1]')
+        .hasText('0', 'length updated in component1');
+      assert
+        .dom('[data-test-length2]')
+        .hasText('0', 'length updated in component2');
+    });
   });
 });
