@@ -1,25 +1,26 @@
-Ember Local Storage Decorator
-==============================================================================
+# Ember Local Storage Decorator
+
 
 Reactive localStorage and sessionStorage for Ember Octane with multiple APIs to fit your needs.
 
 
-Compatibility
-------------------------------------------------------------------------------
+## Compatibility
 
 - Ember.js v5.12 or above
 - Embroider or ember-auto-import v2
 
 
-Installation
-------------------------------------------------------------------------------
+## Installation
 
-```
-ember install ember-local-storage-decorator
+```bash
+pnpm install ember-local-storage-decorator
+# or
+yarn add ember-local-storage-decorator
+# or
+npm install ember-local-storage-decorator
 ```
 
-Usage
-------------------------------------------------------------------------------
+## Usage
 
 This library provides three ways to work with browser storage in Ember:
 
@@ -46,14 +47,17 @@ export default class MyComponent extends Component {
 }
 ```
 
-**TrackedStorage API:**
-- `getItem(key)` - Retrieve a value
-- `setItem(key, value)` - Store a value (JSON serialized automatically)
-- `removeItem(key)` - Remove a value
-- `clear()` - Clear all items with the same prefix
-- `key(index)` - Get key at index
-- `length` - Number of stored items
-- `clearCache()` - Clear internal cache (useful for testing)
+### TrackedStorage API
+
+| Method | Description |
+|--------|-------------|
+| `getItem(key)` | Retrieve a value |
+| `setItem(key, value)` | Store a value (JSON serialized automatically) |
+| `removeItem(key)` | Remove a value |
+| `clear()` | Clear all items with the same prefix |
+| `key(index)` | Get key at index |
+| `length` | Number of stored items |
+| `clearCache()` | Clear internal cache (useful for testing) |
 
 Values are automatically JSON serialized/deserialized and frozen to prevent mutation. TrackedStorage uses a prefix system (`__tracked_storage__` by default) to isolate its keys from other code using the same storage.
 
