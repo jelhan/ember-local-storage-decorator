@@ -98,7 +98,7 @@ export default class MyComponent extends Component {
 
 The decorators attach a getter to read the value from storage and a setter to write changes to storage.
 
-**Basic Usage:**
+### Basic Usage
 
 ```js
 const Klass = class {
@@ -110,7 +110,7 @@ klass.foo = 'baz';
 klass.foo; // 'baz'
 ```
 
-**Custom Storage Key:**
+### Custom Storage Key
 
 You may specify a different key to be used in storage:
 
@@ -133,7 +133,7 @@ const Klass = class {
 };
 ```
 
-**Default Values:**
+### Default Values
 You can provide a default value that will be used if no value exists in storage:
 
 ```js
