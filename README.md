@@ -99,7 +99,6 @@ The decorators attach a getter to read the value from storage and a setter to wr
 ```js
 const Klass = class {
   @localStorage foo;
-  @sessionStorage bar;
 }
 const klass = new Klass();
 
@@ -114,7 +113,6 @@ You may specify a different key to be used in storage:
 ```js
 const Klass = class {
   @localStorage('bar') foo;
-  @sessionStorage('baz') qux;
 };
 const klass = new Klass();
 
@@ -128,6 +126,16 @@ The `@sessionStorage` decorator works identically to `@localStorage` but uses se
 ```js
 const Klass = class {
   @sessionStorage tempData;
+};
+```
+
+**Default Values:**
+You can provide a default value that will be used if no value exists in storage:
+
+```js
+const Klass = class {
+  @localStorage foo = 'defaultValue';
+  @sessionStorage bar = { count: 0 };
 };
 ```
 
