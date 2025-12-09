@@ -1,16 +1,16 @@
 # Ember Local Storage Decorator
 
 
-Reactive localStorage and sessionStorage for Ember Octane with multiple APIs to fit your needs.
+Reactive localStorage and sessionStorage for Ember with multiple APIs to fit your needs.
 
 
-## Compatibility
+## ✅ Compatibility
 
 - Ember.js v5.12 or above
 - Embroider or ember-auto-import v2
 
 
-## Installation
+## 📦 Installation
 
 ```bash
 pnpm install ember-local-storage-decorator
@@ -20,7 +20,7 @@ yarn add ember-local-storage-decorator
 npm install ember-local-storage-decorator
 ```
 
-## Usage
+## 🚀 Usage
 
 This library provides three ways to work with browser storage in Ember:
 
@@ -143,7 +143,7 @@ const Klass = class {
 };
 ```
 
-## Common Features
+## ⭐ Common Features
 
 All three approaches share these characteristics:
 
@@ -184,7 +184,7 @@ instanceA.getItem('foo'); // 'baz'
 ### Prefix Isolation
 TrackedStorage uses a prefix system (default: `__tracked_storage__`) to namespace its keys and avoid conflicts with other code using the same storage. The decorators use TrackedStorage internally, so they also benefit from this isolation.
 
-## Testing
+## 🧪 Testing
 
 Browser storage is global state that persists between test runs. To avoid leaking state between tests, you should clear both the storage and the internal caches.
 
@@ -265,13 +265,11 @@ test('some code relying on a value in session storage', function() {
 });
 ```
 
-Contributing
-------------------------------------------------------------------------------
+## 🤝 Contributing
 
 See the [Contributing](CONTRIBUTING.md) guide for details.
 
 
-License
-------------------------------------------------------------------------------
+## 📄 License
 
 This project is licensed under the [MIT License](LICENSE.md).
