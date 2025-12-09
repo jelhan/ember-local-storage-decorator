@@ -23,13 +23,39 @@ export const DEFAULT_PREFIX = '__tracked_storage__';
 const sharedCaches = new Map<string, TrackedMap<string, unknown>>();
 const sharedManagedKeys = new Map<string, Set<string>>();
 
-// Track which storage types have event listeners registered
-const listenerRegistered = new WeakSet<Storage>();
-
 // Get a unique key for cache lookup
 function getCacheKey(storage: Storage, prefix: string): string {
   return `${storage === window.localStorage ? 'local' : 'session'}:${prefix}`;
 }
+
+// Setup storage event listener once at module level
+// For localStorage: syncs changes across tabs
+// For sessionStorage: syncs changes across iframes within the same tab
+window.addEventListener('storage', (event: StorageEvent) => {
+  if (!event.key || !event.storageArea) {
+    return;
+  }
+
+  // Determine the storage type prefix for filtering
+  const storagePrefix =
+    event.storageArea === window.localStorage ? 'local:' : 'session:';
+
+  // Update all caches for this storage type that have this key
+  for (const [cacheKey, managedKeys] of sharedManagedKeys.entries()) {
+    if (cacheKey.startsWith(storagePrefix) && managedKeys.has(event.key)) {
+      const cache = sharedCaches.get(cacheKey)!;
+      const newValue = jsonParseAndFreeze(event.newValue);
+      cache.set(event.key, newValue);
+
+      // Track or untrack key based on whether it was added or removed
+      if (newValue !== null) {
+        managedKeys.add(event.key);
+      } else {
+        managedKeys.delete(event.key);
+      }
+    }
+  }
+});
 
 /**
  * A tracked wrapper around the Web Storage API (localStorage or sessionStorage).
@@ -90,41 +116,6 @@ export class TrackedStorage {
         this.#cache.set(key, jsonParseAndFreeze(storage.getItem(key)));
         this.#managedKeys.add(key);
       }
-    }
-
-    // Setup storage event listener once per storage type
-    if (!listenerRegistered.has(storage)) {
-      listenerRegistered.add(storage);
-
-      window.addEventListener('storage', (event: StorageEvent) => {
-        if (!event.key || event.storageArea !== storage) {
-          return;
-        }
-
-        // Determine the storage type prefix for filtering
-        const storagePrefix =
-          storage === window.localStorage ? 'local:' : 'session:';
-
-        // Update all caches for this storage type that have this key
-        for (const [cacheKey, managedKeys] of sharedManagedKeys.entries()) {
-          // Only update caches for the same storage type
-          if (
-            cacheKey.startsWith(storagePrefix) &&
-            managedKeys.has(event.key)
-          ) {
-            const cache = sharedCaches.get(cacheKey)!;
-            const newValue = jsonParseAndFreeze(event.newValue);
-            cache.set(event.key, newValue);
-
-            // Track or untrack key based on whether it was added or removed
-            if (newValue !== null) {
-              managedKeys.add(event.key);
-            } else {
-              managedKeys.delete(event.key);
-            }
-          }
-        }
-      });
     }
   }
 
