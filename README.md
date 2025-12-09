@@ -99,6 +99,7 @@ The decorators attach a getter to read the value from storage and a setter to wr
 ```js
 const Klass = class {
   @localStorage foo;
+  @sessionStorage bar;
 }
 const klass = new Klass();
 
@@ -113,6 +114,7 @@ You may specify a different key to be used in storage:
 ```js
 const Klass = class {
   @localStorage('bar') foo;
+  @sessionStorage('baz') qux;
 };
 const klass = new Klass();
 
@@ -224,7 +226,7 @@ module('Integration | Component | my-component', function (hooks) {
 Decorators perform initialization when a property is first decorated. If you need to manually set a storage value in tests after the decorator has been applied, you must reinitialize the key:
 
 ```js
-import { initializeLocalStorageKey } from 'ember-local-storage-decorator';
+import { initializeLocalStorageKey, initializeSessionStorageKey } from 'ember-local-storage-decorator';
 
 test('some code relying on a value in local storage', function() {
   // Manually set a value in storage
@@ -243,6 +245,11 @@ import { DEFAULT_PREFIX, initializeLocalStorageKey } from 'ember-local-storage-d
 test('some code relying on a value in local storage', function() {
   window.localStorage.setItem(`${DEFAULT_PREFIX}:foo`, JSON.stringify('bar'));
   initializeLocalStorageKey('foo');
+});
+
+test('some code relying on a value in session storage', function() {
+  window.sessionStorage.setItem('foo', 'bar');
+  initializeSessionStorageKey('foo');
 });
 ```
 
