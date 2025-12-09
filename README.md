@@ -161,11 +161,11 @@ Object.isFrozen(data.items); // true
 Changes are automatically observed across different class instances and respond to StorageEvents from other tabs:
 
 ```js
-const instanceA = new MyComponent();
-const instanceB = new MyComponent();
+const instanceA = new TrackedStorage(window.localStorage);
+const instanceB = new TrackedStorage(window.localStorage);
 
-instanceA.storage.setItem('foo', 'bar');
-instanceB.storage.getItem('foo'); // 'bar'
+instanceA.setItem('foo', 'bar');
+instanceB.getItem('foo'); // 'bar'
 
 // Responds to changes from other browser tabs
 window.dispatchEvent(
@@ -174,7 +174,7 @@ window.dispatchEvent(
     newValue: '"baz"' 
   })
 );
-instanceA.storage.getItem('foo'); // 'baz'
+instanceA.getItem('foo'); // 'baz'
 ```
 
 **Prefix Isolation:**
