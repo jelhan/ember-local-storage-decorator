@@ -143,10 +143,10 @@ const Klass = class {
 
 All three approaches share these characteristics:
 
-**JSON Serialization:**
+### JSON Serialization
 Values are stored as JSON strings. Only values that can be serialized to JSON are supported.
 
-**Deep Freezing:**
+### Deep Freezing
 Objects and arrays are deep frozen to prevent accidental mutation:
 
 ```js
@@ -157,7 +157,7 @@ Object.isFrozen(data); // true
 Object.isFrozen(data.items); // true
 ```
 
-**Cross-Instance Reactivity:**
+### Cross-Instance Reactivity
 Changes are automatically observed across different class instances and respond to StorageEvents from other tabs:
 
 ```js
@@ -177,7 +177,7 @@ window.dispatchEvent(
 instanceA.getItem('foo'); // 'baz'
 ```
 
-**Prefix Isolation:**
+### Prefix Isolation
 TrackedStorage uses a prefix system (default: `__tracked_storage__`) to namespace its keys and avoid conflicts with other code using the same storage. The decorators use TrackedStorage internally, so they also benefit from this isolation.
 
 ## Testing
@@ -229,7 +229,7 @@ module('Integration | Component | my-component', function (hooks) {
 });
 ```
 
-**Reinitializing Keys:**
+#### Reinitializing Keys
 
 Decorators perform initialization when a property is first decorated. If you need to manually set a storage value in tests after the decorator has been applied, you must reinitialize the key:
 
