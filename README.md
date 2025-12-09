@@ -22,7 +22,7 @@ Usage
 ------------------------------------------------------------------------------
 
 ```js
-import localStorage from 'ember-local-storage-decorator';
+import { localStorage } from 'ember-local-storage-decorator';
 import Component from '@glimmer/component';
 
 export default class MyComponent extends Component {
