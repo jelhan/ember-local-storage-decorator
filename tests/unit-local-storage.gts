@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { module, test } from 'qunit';
 import { setupTest } from 'ember-qunit';
-import localStorage, {
+import {
+  localStorage,
   clearLocalStorageCache,
   initializeLocalStorageKey,
 } from '#src/index.ts';

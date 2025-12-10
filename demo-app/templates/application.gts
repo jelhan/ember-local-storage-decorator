@@ -1,5 +1,5 @@
 import Component from '@glimmer/component';
-import localStorage from '#src/index.ts';
+import { localStorage } from '#src/index.ts';
 import { pageTitle } from 'ember-page-title';
 import type Owner from '@ember/owner';
 

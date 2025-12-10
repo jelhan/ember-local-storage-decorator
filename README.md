@@ -1,7 +1,7 @@
 Ember Local Storage Decorator
 ==============================================================================
 
-Decorator to use `localStorage` in Ember Octane.
+Decorator to use `localStorage` and `sessionStorage` in Ember.
 
 
 Compatibility
@@ -21,43 +21,58 @@ ember install ember-local-storage-decorator
 Usage
 ------------------------------------------------------------------------------
 
+This addon provides two decorators: `@localStorage` and `@sessionStorage`. 
+Both work identically, the only difference is the backing storage used. 
+`@localStorage` persists data in `window.localStorage` available across browser 
+sessions, while `@sessionStorage` persists data in `window.sessionStorage` only for 
+the duration of the current page session.
+
 ```js
-import localStorage from 'ember-local-storage-decorator';
+import { localStorage, sessionStorage } from 'ember-local-storage-decorator';
 import Component from '@glimmer/component';
 
 export default class MyComponent extends Component {
-  @localStorage foo
+  @localStorage foo;
+  @sessionStorage bar;
 }
 ```
 
-Decorate a class property with `@localStorage` to bind it to `localStorage`.
-It will attach a getter to read the value from `localStorage` and a setter
-to write changes to `localStorage`.
+Decorate a class property with `@localStorage` or `@sessionStorage` to bind it 
+to the respective storage. It will attach a getter to read the value from storage 
+and a setter to write changes to storage.
 
 ```js
 const Klass = class {
   @localStorage foo;
+  @sessionStorage bar;
 }
 const klass = new Klass();
 
 klass.foo = 'baz';
 window.localStorage.getItem('foo'); // '"baz"'
+
+klass.bar = 'qux';
+window.sessionStorage.getItem('bar'); // '"qux"'
 ```
 
-You may specify another key to be used in local storage as an argument to the
+You may specify another key to be used in storage as an argument to the
 decorator.
 
 ```js
 const Klass = class {
   @localStorage('bar') foo;
+  @sessionStorage('baz') qux;
 };
 const klass = new Klass();
 
 klass.foo = 'baz';
 window.localStorage.getItem('bar'); // '"baz"'
+
+klass.qux = 'quux';
+window.sessionStorage.getItem('baz'); // '"quux"'
 ```
 
-The value is stored as a JSON string in `localStorage`. Therefore only values
+The value is stored as a JSON string in storage. Therefore only values
 which can be serialized to JSON are supported.
 
 Objects (and arrays) are deep frozen to avoid leaking state. Getter returns a
@@ -103,51 +118,60 @@ klassA.foo; // 'baz'
 klassB.foo; // 'baz'
 ```
 
-Due to limitations of `localStorage` direct changes of the value bypassing
-`@localStorage` decorator can not be observed. Therefore you _should not_
-manipulate the `localStorage` directly.
+Due to limitations of the Web Storage API, direct changes to the storage 
+bypassing the decorator can not be observed. Therefore you _should not_
+manipulate `window.localStorage` or `window.sessionStorage` directly.
 
 ## Testing
 
-`window.localStorage` is a global state, which is shared between test runs.
-The decorator uses a global cache, which is also shared between instances.
+`window.localStorage` and `window.sessionStorage` are global state, which is shared between test runs.
+The decorators use a global cache, which is also shared between instances.
 Both are not reset automatically between test jobs.
 
 To avoid leaking state between test jobs it's recommended to clear the cache
-of `@localStorage` decorator before each test. A `clearLocalStorageCache`
-helper function is exported from `ember-local-storage-decorator` to do so.
+of `@localStorage` and `@sessionStorage` decorators before each test. 
+`clearLocalStorageCache` and `clearSessionStorageCache` helper functions are 
+exported from `ember-local-storage-decorator` to do so.
 
-Additionally `window.localStorage` should be either cleared before each test
-run or mocked.
+Additionally `window.localStorage` and `window.sessionStorage` should be either 
+cleared before each test run or mocked.
 
 ```js
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
-import { clearLocalStorageCache } from 'ember-local-storage-decorator';
+import { clearLocalStorageCache, clearSessionStorageCache } from 'ember-local-storage-decorator';
 
 module('Integration | Component | my-component', function (hooks) {
   setupRenderingTest(hooks);
 
   hooks.beforeEach(function () {
     clearLocalStorageCache();
+    clearSessionStorageCache();
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 });
 ```
 
-`@localStorage` decorator performs some initialization work when a property
-is decorated. This includes picking up the current value from local storage
-and adding it to its internal cache. Manual changes to local storage _after_
-a property has been decorated are _not_ picked up. As class instances are
-often shared between test jobs, you need to manual reinitialize a local
-storage key in tests.
+`@localStorage` and `@sessionStorage` decorators perform some initialization 
+work when a property is decorated. This includes picking up the current value 
+from local storage or session storage and adding it to its internal cache. 
+Manual changes to local storage or session storage _after_ a property has been 
+decorated are _not_ picked up. As class instances are often shared between test 
+jobs, you need to manual reinitialize a local storage or session storage key 
+in tests.
 
 ```js
-import { initializeLocalStorageKey } from 'ember-local-storage-decorator';
+import { initializeLocalStorageKey, initializeSessionStorageKey } from 'ember-local-storage-decorator';
 
 test('some code relying on a value in local storage', function() {
   window.localStorage.setItem('foo', 'bar');
   initializeLocalStorageKey('foo');
+});
+
+test('some code relying on a value in session storage', function() {
+  window.sessionStorage.setItem('foo', 'bar');
+  initializeSessionStorageKey('foo');
 });
 ```
 

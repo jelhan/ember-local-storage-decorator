@@ -2,7 +2,7 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { click, render } from '@ember/test-helpers';
-import localStorage, { clearLocalStorageCache } from '#src/index.ts';
+import { localStorage, clearLocalStorageCache } from '#src/index.ts';
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';

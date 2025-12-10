@@ -1,7 +1,7 @@
 {
   "name": "ember-local-storage-decorator",
   "version": "0.3.0",
-  "description": "Decorator to use localStorage in Ember Octane",
+  "description": "Decorator to use localStorage and sessionStorage in Ember",
   "keywords": [
     "ember-addon"
   ],
