@@ -1,7 +1,7 @@
 Ember Local Storage Decorator
 ==============================================================================
 
-Decorator to use `localStorage` in Ember Octane.
+Decorator to use `localStorage` and `sessionStorage` in Ember.
 
 
 Compatibility
@@ -23,8 +23,9 @@ Usage
 
 This addon provides two decorators: `@localStorage` and `@sessionStorage`. 
 Both work identically, the only difference is the backing storage used. 
-`@localStorage` persists data across browser sessions, while `@sessionStorage` 
-only persists data for the duration of the page session.
+`@localStorage` persists data in `window.localStorage` available across browser 
+sessions, while `@sessionStorage` persists data in `window.sessionStorage` only for 
+the duration of the current page session.
 
 ```js
 import { localStorage, sessionStorage } from 'ember-local-storage-decorator';
