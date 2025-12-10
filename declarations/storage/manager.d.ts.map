@@ -1,0 +1,1 @@
+{"version":3,"file":"manager.d.ts","sourceRoot":"","sources":["../../src/storage/manager.ts"],"names":[],"mappings":"AAwCA,MAAM,MAAM,cAAc,GAAG;IAC3B,gBAAgB,EAAE,CAAC,GAAG,IAAI,EAAE,OAAO,EAAE,KAAK,OAAO,CAAC;IAClD,UAAU,EAAE,MAAM,IAAI,CAAC;IACvB,aAAa,EAAE,CAAC,GAAG,EAAE,MAAM,KAAK,IAAI,CAAC;CACtC,CAAC;AAEF,wBAAgB,oBAAoB,CAAC,OAAO,EAAE,OAAO,GAAG,cAAc,CAmGrE"}
