@@ -5,19 +5,12 @@ const { decoratorFactory, clearCache, initializeKey } = createStorageManager(
   window.localStorage,
 );
 
-export default function localStorageDecoratorFactory(
-  ...args: ElementDescriptor
-): void;
-export default function localStorageDecoratorFactory(): (
-  target: object,
-  key: string,
-) => void;
-export default function localStorageDecoratorFactory(
+export function localStorage(...args: ElementDescriptor): void;
+export function localStorage(): (target: object, key: string) => void;
+export function localStorage(
   customKey: string,
 ): (target: object, key: string) => void;
-export default function localStorageDecoratorFactory(
-  ...args: unknown[]
-): unknown {
+export function localStorage(...args: unknown[]): unknown {
   return decoratorFactory(...args);
 }
 

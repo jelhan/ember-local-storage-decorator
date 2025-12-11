@@ -5,19 +5,12 @@ const { decoratorFactory, clearCache, initializeKey } = createStorageManager(
   window.sessionStorage,
 );
 
-export default function sessionStorageDecoratorFactory(
-  ...args: ElementDescriptor
-): void;
-export default function sessionStorageDecoratorFactory(): (
-  target: object,
-  key: string,
-) => void;
-export default function sessionStorageDecoratorFactory(
+export function sessionStorage(...args: ElementDescriptor): void;
+export function sessionStorage(): (target: object, key: string) => void;
+export function sessionStorage(
   customKey: string,
 ): (target: object, key: string) => void;
-export default function sessionStorageDecoratorFactory(
-  ...args: unknown[]
-): unknown {
+export function sessionStorage(...args: unknown[]): unknown {
   return decoratorFactory(...args);
 }
 

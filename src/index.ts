@@ -3,13 +3,13 @@ const trackedLocalStorage = new TrackedStorage(window.localStorage);
 const trackedSessionStorage = new TrackedStorage(window.sessionStorage);
 
 export {
-  default as localStorage,
+  localStorage,
   clearLocalStorageCache,
   initializeLocalStorageKey,
 } from './decorator/localStorage.ts';
 
 export {
-  default as sessionStorage,
+  sessionStorage,
   clearSessionStorageCache,
   initializeSessionStorageKey,
 } from './decorator/sessionStorage.ts';
