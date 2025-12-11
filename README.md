@@ -1,10 +1,7 @@
-Ember Local Storage Decorator
-==============================================================================
-
-Decorator to use `localStorage` and `sessionStorage` in Ember.
+# Ember Local Storage Decorator
 
 
-Reactive localStorage and sessionStorage for Ember with multiple APIs to fit your needs.
+Reactive `localStorage` and `sessionStorage` for Ember with multiple APIs to fit your needs.
 
 
 ## ✅ Compatibility
@@ -31,59 +28,102 @@ This library provides three ways to work with browser storage in Ember:
 
 The most flexible option - a tracked wrapper around the Web Storage API that works with both localStorage and sessionStorage. All operations are reactive and will trigger Ember's reactivity system.
 
-This addon provides two decorators: `@localStorage` and `@sessionStorage`. 
-Both work identically, the only difference is the backing storage used. 
-`@localStorage` persists data in `window.localStorage` available across browser 
-sessions, while `@sessionStorage` persists data in `window.sessionStorage` only for 
-the duration of the current page session.
+```js
+import { TrackedStorage } from 'ember-local-storage-decorator';
+import Component from '@glimmer/component';
+
+export default class MyComponent extends Component {
+  storage = new TrackedStorage(window.localStorage);
+  // or: new TrackedStorage(window.sessionStorage)
+  // or with custom prefix: new TrackedStorage(window.localStorage, 'my_app')
+
+  get user() {
+    return this.storage.getItem('user');
+  }
+
+  updateUser = (name) => {
+    this.storage.setItem('user', { name });
+  }
+}
+```
+
+### TrackedStorage API
+
+| Method | Description |
+|--------|-------------|
+| `getItem(key)` | Retrieve a value |
+| `setItem(key, value)` | Store a value (JSON serialized automatically) |
+| `removeItem(key)` | Remove a value |
+| `clear()` | Clear all items with the same prefix |
+| `key(index)` | Get key at index |
+| `length` | Number of stored items |
+| `clearCache()` | Clear internal cache (useful for testing) |
+
+Values are automatically JSON serialized/deserialized and frozen to prevent mutation. TrackedStorage uses a prefix system (`__tracked_storage__` by default) to isolate its keys from other code using the same storage.
+
+### 2. Pre-instantiated Storage Instances
+
+For convenience, pre-instantiated TrackedStorage instances are provided:
+
+```js
+import { trackedLocalStorage, trackedSessionStorage } from 'ember-local-storage-decorator';
+import Component from '@glimmer/component';
+
+export default class MyComponent extends Component {
+  get currentUser() {
+    return trackedLocalStorage.getItem('user');
+  }
+
+  saveUser = (user) => {
+    trackedLocalStorage.setItem('user', user);
+  }
+}
+```
+
+These instances use the default prefix and are ready to use immediately.
+
+### 3. Property Decorators
+
+For a more traditional approach, use the `@localStorage` and `@sessionStorage` decorators to bind class properties directly to storage:
 
 ```js
 import { localStorage, sessionStorage } from 'ember-local-storage-decorator';
 import Component from '@glimmer/component';
 
 export default class MyComponent extends Component {
-  @localStorage foo;
-  @sessionStorage bar;
+  @localStorage user;
+  @sessionStorage tempData;
 }
 ```
 
-Decorate a class property with `@localStorage` or `@sessionStorage` to bind it 
-to the respective storage. It will attach a getter to read the value from storage 
-and a setter to write changes to storage.
+The decorators attach a getter to read the value from storage and a setter to write changes to storage.
+
+### Basic Usage
 
 ```js
 const Klass = class {
   @localStorage foo;
-  @sessionStorage bar;
 }
 const klass = new Klass();
 
 klass.foo = 'baz';
-window.localStorage.getItem('foo'); // '"baz"'
-
-klass.bar = 'qux';
-window.sessionStorage.getItem('bar'); // '"qux"'
+klass.foo; // 'baz'
 ```
 
-You may specify another key to be used in storage as an argument to the
-decorator.
+### Custom Storage Key
+
+You may specify a different key to be used in storage:
 
 ```js
 const Klass = class {
   @localStorage('bar') foo;
-  @sessionStorage('baz') qux;
 };
 const klass = new Klass();
 
-klass.foo = 'baz';
-window.localStorage.getItem('bar'); // '"baz"'
-
-klass.qux = 'quux';
-window.sessionStorage.getItem('baz'); // '"quux"'
+klass.foo = 'baz'; // stored under key 'bar'
 ```
 
-The value is stored as a JSON string in storage. Therefore only values
-which can be serialized to JSON are supported.
+**sessionStorage Decorator:**
 
 The `@sessionStorage` decorator works identically to `@localStorage` but uses sessionStorage instead:
 
@@ -103,48 +143,99 @@ const Klass = class {
 };
 ```
 
-Due to limitations of the Web Storage API, direct changes to the storage 
-bypassing the decorator can not be observed. Therefore you _should not_
-manipulate `window.localStorage` or `window.sessionStorage` directly.
+## ⭐ Common Features
 
 All three approaches share these characteristics:
 
-`window.localStorage` and `window.sessionStorage` are global state, which is shared between test runs.
-The decorators use a global cache, which is also shared between instances.
-Both are not reset automatically between test jobs.
+### JSON Serialization
+Values are stored as JSON strings. Only values that can be serialized to JSON are supported.
 
-To avoid leaking state between test jobs it's recommended to clear the cache
-of `@localStorage` and `@sessionStorage` decorators before each test. 
-`clearLocalStorageCache` and `clearSessionStorageCache` helper functions are 
-exported from `ember-local-storage-decorator` to do so.
+### Deep Freezing
+Objects and arrays are deep frozen to prevent accidental mutation:
 
-Additionally `window.localStorage` and `window.sessionStorage` should be either 
-cleared before each test run or mocked.
+```js
+trackedLocalStorage.setItem('data', { items: ['a', 'b'] });
+const data = trackedLocalStorage.getItem('data');
+
+Object.isFrozen(data); // true
+Object.isFrozen(data.items); // true
+```
+
+### Cross-Instance Reactivity
+Changes are automatically observed across different class instances and respond to StorageEvents from other tabs:
+
+```js
+const instanceA = new TrackedStorage(window.localStorage);
+const instanceB = new TrackedStorage(window.localStorage);
+
+instanceA.setItem('foo', 'bar');
+instanceB.getItem('foo'); // 'bar'
+
+// Responds to changes from other browser tabs
+window.dispatchEvent(
+  new StorageEvent('storage', { 
+    key: '__tracked_storage__:foo', 
+    newValue: '"baz"' 
+  })
+);
+instanceA.getItem('foo'); // 'baz'
+```
+
+### Prefix Isolation
+TrackedStorage uses a prefix system (default: `__tracked_storage__`) to namespace its keys and avoid conflicts with other code using the same storage. The decorators use TrackedStorage internally, so they also benefit from this isolation.
+
+## 🧪 Testing
+
+Browser storage is global state that persists between test runs. To avoid leaking state between tests, you should clear both the storage and the internal caches.
+
+### Testing with TrackedStorage or Pre-instantiated Instances
 
 ```js
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
-import { clearLocalStorageCache, clearSessionStorageCache } from 'ember-local-storage-decorator';
+import { trackedLocalStorage } from 'ember-local-storage-decorator';
 
 module('Integration | Component | my-component', function (hooks) {
   setupRenderingTest(hooks);
 
   hooks.beforeEach(function () {
-    clearLocalStorageCache();
-    clearSessionStorageCache();
     window.localStorage.clear();
-    window.sessionStorage.clear();
+    trackedLocalStorage.clearCache();
   });
 });
 ```
 
-`@localStorage` and `@sessionStorage` decorators perform some initialization 
-work when a property is decorated. This includes picking up the current value 
-from local storage or session storage and adding it to its internal cache. 
-Manual changes to local storage or session storage _after_ a property has been 
-decorated are _not_ picked up. As class instances are often shared between test 
-jobs, you need to manual reinitialize a local storage or session storage key 
-in tests.
+If you're creating your own TrackedStorage instances, call `clearCache()` on each instance or simply create new instances in your tests.
+
+### Testing with Decorators
+
+For decorator-based code, use the provided helper functions:
+
+```js
+import { module, test } from 'qunit';
+import { setupRenderingTest } from 'ember-qunit';
+import { 
+  clearLocalStorageCache, 
+  clearSessionStorageCache,
+  initializeLocalStorageKey,
+  initializeSessionStorageKey
+} from 'ember-local-storage-decorator';
+
+module('Integration | Component | my-component', function (hooks) {
+  setupRenderingTest(hooks);
+
+  hooks.beforeEach(function () {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+    clearLocalStorageCache();
+    clearSessionStorageCache();
+  });
+});
+```
+
+#### Reinitializing Keys
+
+Decorators perform initialization when a property is first decorated. If you need to manually set a storage value in tests after the decorator has been applied, you must reinitialize the key:
 
 ```js
 import { initializeLocalStorageKey, initializeSessionStorageKey } from 'ember-local-storage-decorator';
@@ -155,11 +246,6 @@ test('some code relying on a value in local storage', function() {
   
   // Reinitialize the key so the decorator picks up the change
   initializeLocalStorageKey('foo');
-});
-
-test('some code relying on a value in session storage', function() {
-  window.sessionStorage.setItem('foo', 'bar');
-  initializeSessionStorageKey('foo');
 });
 ```
 
