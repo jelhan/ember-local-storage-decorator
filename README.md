@@ -123,9 +123,9 @@ const klass = new Klass();
 klass.foo = 'baz'; // stored under key 'bar'
 ```
 
-**sessionStorage Decorator:**
+### `@sessionStorage` Decorator
 
-The `@sessionStorage` decorator works identically to `@localStorage` but uses sessionStorage instead:
+The `@sessionStorage` decorator works identically to `@localStorage` but uses `window.sessionStorage` instead:
 
 ```js
 const Klass = class {
