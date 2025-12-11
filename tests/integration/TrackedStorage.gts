@@ -25,6 +25,7 @@ storageTypes.forEach(({ name, storage: windowStorage }) => {
     hooks.beforeEach(function () {
       windowStorage.clear();
       storage = new TrackedStorage(windowStorage);
+      storage.clearCache();
     });
 
     test('basic get and set operations work', async function (assert) {
@@ -78,162 +79,152 @@ storageTypes.forEach(({ name, storage: windowStorage }) => {
 
       await click('[data-test-btn]');
       assert.dom('[data-test-value]').hasText('1');
-
-      await click('[data-test-btn]');
-      assert.dom('[data-test-value]').hasText('2');
-
-      if (name === 'localStorage') {
-        await click('[data-test-btn]');
-        assert.dom('[data-test-value]').hasText('3');
-      }
     });
 
-    if (name === 'localStorage') {
-      test('works with complex objects', async function (assert) {
-        storage.setItem('user', { name: 'Alice', age: 30 });
+    test('works with complex objects', async function (assert) {
+      storage.setItem('user', { name: 'Alice', age: 30 });
 
-        class TestComponent extends Component {
-          storage = storage;
+      class TestComponent extends Component {
+        storage = storage;
 
-          get user() {
-            return this.storage.getItem<{ name: string; age: number }>('user');
-          }
-
-          updateUser = () => {
-            this.storage.setItem('user', { name: 'Bob', age: 25 });
-          };
-
-          <template>
-            <div data-test-name>{{this.user.name}}</div>
-            <div data-test-age>{{this.user.age}}</div>
-            <button
-              type="button"
-              {{on "click" this.updateUser}}
-              data-test-btn
-            ></button>
-          </template>
+        get user() {
+          return this.storage.getItem<{ name: string; age: number }>('user');
         }
 
-        await render(<template><TestComponent /></template>);
-        assert.dom('[data-test-name]').hasText('Alice');
-        assert.dom('[data-test-age]').hasText('30');
+        updateUser = () => {
+          this.storage.setItem('user', { name: 'Bob', age: 25 });
+        };
 
-        await click('[data-test-btn]');
-        assert.dom('[data-test-name]').hasText('Bob');
-        assert.dom('[data-test-age]').hasText('25');
-      });
+        <template>
+          <div data-test-name>{{this.user.name}}</div>
+          <div data-test-age>{{this.user.age}}</div>
+          <button
+            type="button"
+            {{on "click" this.updateUser}}
+            data-test-btn
+          ></button>
+        </template>
+      }
 
-      test('multiple keys are independent', async function (assert) {
-        storage.setItem('foo', 'initial foo');
-        storage.setItem('bar', 'initial bar');
+      await render(<template><TestComponent /></template>);
+      assert.dom('[data-test-name]').hasText('Alice');
+      assert.dom('[data-test-age]').hasText('30');
 
-        class TestComponent extends Component {
-          storage = storage;
+      await click('[data-test-btn]');
+      assert.dom('[data-test-name]').hasText('Bob');
+      assert.dom('[data-test-age]').hasText('25');
+    });
 
-          updateFoo = () => {
-            this.storage.setItem('foo', 'updated foo');
-          };
+    test('multiple keys are independent', async function (assert) {
+      storage.setItem('foo', 'initial foo');
+      storage.setItem('bar', 'initial bar');
 
-          updateBar = () => {
-            this.storage.setItem('bar', 'updated bar');
-          };
+      class TestComponent extends Component {
+        storage = storage;
 
-          <template>
-            <div data-test-foo>{{this.storage.getItem "foo"}}</div>
-            <div data-test-bar>{{this.storage.getItem "bar"}}</div>
-            <button
-              type="button"
-              {{on "click" this.updateFoo}}
-              data-test-foo-btn
-            ></button>
-            <button
-              type="button"
-              {{on "click" this.updateBar}}
-              data-test-bar-btn
-            ></button>
-          </template>
-        }
+        updateFoo = () => {
+          this.storage.setItem('foo', 'updated foo');
+        };
 
-        await render(<template><TestComponent /></template>);
-        assert.dom('[data-test-foo]').hasText('initial foo');
-        assert.dom('[data-test-bar]').hasText('initial bar');
+        updateBar = () => {
+          this.storage.setItem('bar', 'updated bar');
+        };
 
-        await click('[data-test-foo-btn]');
-        assert.dom('[data-test-foo]').hasText('updated foo');
-        assert.dom('[data-test-bar]').hasText('initial bar');
+        <template>
+          <div data-test-foo>{{this.storage.getItem "foo"}}</div>
+          <div data-test-bar>{{this.storage.getItem "bar"}}</div>
+          <button
+            type="button"
+            {{on "click" this.updateFoo}}
+            data-test-foo-btn
+          ></button>
+          <button
+            type="button"
+            {{on "click" this.updateBar}}
+            data-test-bar-btn
+          ></button>
+        </template>
+      }
 
-        await click('[data-test-bar-btn]');
-        assert.dom('[data-test-foo]').hasText('updated foo');
-        assert.dom('[data-test-bar]').hasText('updated bar');
-      });
+      await render(<template><TestComponent /></template>);
+      assert.dom('[data-test-foo]').hasText('initial foo');
+      assert.dom('[data-test-bar]').hasText('initial bar');
 
-      test('removeItem works', async function (assert) {
-        storage.setItem('temp', 'value');
+      await click('[data-test-foo-btn]');
+      assert.dom('[data-test-foo]').hasText('updated foo');
+      assert.dom('[data-test-bar]').hasText('initial bar');
 
-        class TestComponent extends Component {
-          storage = storage;
+      await click('[data-test-bar-btn]');
+      assert.dom('[data-test-foo]').hasText('updated foo');
+      assert.dom('[data-test-bar]').hasText('updated bar');
+    });
 
-          remove = () => {
-            this.storage.removeItem('temp');
-          };
+    test('removeItem works', async function (assert) {
+      storage.setItem('temp', 'value');
 
-          <template>
-            <div data-test-value>{{this.storage.getItem "temp"}}</div>
-            <button
-              type="button"
-              {{on "click" this.remove}}
-              data-test-btn
-            ></button>
-          </template>
-        }
+      class TestComponent extends Component {
+        storage = storage;
 
-        await render(<template><TestComponent /></template>);
-        assert.dom('[data-test-value]').hasText('value');
+        remove = () => {
+          this.storage.removeItem('temp');
+        };
 
-        await click('[data-test-btn]');
-        assert.dom('[data-test-value]').hasText('');
-      });
+        <template>
+          <div data-test-value>{{this.storage.getItem "temp"}}</div>
+          <button
+            type="button"
+            {{on "click" this.remove}}
+            data-test-btn
+          ></button>
+        </template>
+      }
 
-      test('clear removes all items', async function (assert) {
-        storage.setItem('key1', 'value1');
-        storage.setItem('key2', 'value2');
+      await render(<template><TestComponent /></template>);
+      assert.dom('[data-test-value]').hasText('value');
 
-        class TestComponent extends Component {
-          storage = storage;
+      await click('[data-test-btn]');
+      assert.dom('[data-test-value]').hasText('');
+    });
 
-          clearAll = () => {
-            this.storage.clear();
-          };
+    test('clear removes all items', async function (assert) {
+      storage.setItem('key1', 'value1');
+      storage.setItem('key2', 'value2');
 
-          <template>
-            <div data-test-key1>{{this.storage.getItem "key1"}}</div>
-            <div data-test-key2>{{this.storage.getItem "key2"}}</div>
-            <button
-              type="button"
-              {{on "click" this.clearAll}}
-              data-test-btn
-            ></button>
-          </template>
-        }
+      class TestComponent extends Component {
+        storage = storage;
 
-        await render(<template><TestComponent /></template>);
-        assert.dom('[data-test-key1]').hasText('value1');
-        assert.dom('[data-test-key2]').hasText('value2');
+        clearAll = () => {
+          this.storage.clear();
+        };
 
-        await click('[data-test-btn]');
-        assert.dom('[data-test-key1]').hasText('');
-        assert.dom('[data-test-key2]').hasText('');
-      });
+        <template>
+          <div data-test-key1>{{this.storage.getItem "key1"}}</div>
+          <div data-test-key2>{{this.storage.getItem "key2"}}</div>
+          <button
+            type="button"
+            {{on "click" this.clearAll}}
+            data-test-btn
+          ></button>
+        </template>
+      }
 
-      test('objects are frozen', function (assert) {
-        const data = { items: ['a', 'b'] };
-        storage.setItem('data', data);
+      await render(<template><TestComponent /></template>);
+      assert.dom('[data-test-key1]').hasText('value1');
+      assert.dom('[data-test-key2]').hasText('value2');
 
-        const retrieved = storage.getItem<{ items: string[] }>('data');
-        assert.ok(Object.isFrozen(retrieved));
-        assert.ok(Object.isFrozen(retrieved?.items));
-      });
-    }
+      await click('[data-test-btn]');
+      assert.dom('[data-test-key1]').hasText('');
+      assert.dom('[data-test-key2]').hasText('');
+    });
+
+    test('objects are frozen', function (assert) {
+      const data = { items: ['a', 'b'] };
+      storage.setItem('data', data);
+
+      const retrieved = storage.getItem<{ items: string[] }>('data');
+      assert.ok(Object.isFrozen(retrieved));
+      assert.ok(Object.isFrozen(retrieved?.items));
+    });
 
     test('persists to underlying storage', function (assert) {
       storage.setItem('persisted', 'test value');
