@@ -1,12 +1,9 @@
 import { pageTitle } from 'ember-page-title';
 import { LinkTo } from '@ember/routing';
-import NavBar from '../components/nav-bar.gts';
 import { shiki } from '../modifiers/shiki';
 
 <template>
   {{pageTitle "TrackedStorage"}}
-
-  <NavBar />
 
   <div class="container">
     <section class="doc-section">
@@ -44,7 +41,7 @@ export default class MyComponent extends Component {
       <p>The <code>TrackedStorage</code> constructor accepts two parameters:</p>
       <pre {{shiki}}>new TrackedStorage(storageArea, prefix?)</pre>
 
-      <table class="api-table">
+      <table class="docs-table">
         <thead>
           <tr>
             <th>Parameter</th>
@@ -82,7 +79,7 @@ const storage = new TrackedStorage(window.sessionStorage);
 const storage = new TrackedStorage(window.localStorage, 'my_app');</pre>
 
       <h3>API Reference</h3>
-      <table class="api-table">
+      <table class="docs-table">
         <thead>
           <tr>
             <th>Method</th>

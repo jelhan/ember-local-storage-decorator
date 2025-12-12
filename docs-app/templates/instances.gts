@@ -1,12 +1,9 @@
 import { pageTitle } from 'ember-page-title';
 import { LinkTo } from '@ember/routing';
-import NavBar from '../components/nav-bar.gts';
 import { shiki } from '../modifiers/shiki.ts';
 
 <template>
   {{pageTitle "Pre-instantiated Instances"}}
-
-  <NavBar />
 
   <div class="container">
     <section class="doc-section">
@@ -143,7 +140,7 @@ export default class ShoppingCart extends Component {
         class:
       </p>
 
-      <table class="api-table">
+      <table class="docs-table">
         <thead>
           <tr>
             <th>Method</th>

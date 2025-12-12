@@ -40,18 +40,11 @@ window.addEventListener('storage', (event: StorageEvent) => {
   const storagePrefix =
     event.storageArea === window.localStorage ? 'local:' : 'session:';
 
-  console.log('[TrackedStorage] storage event:', event);
-
   // Update all caches for this storage type that have this key
   for (const [cacheKey, managedKeys] of sharedManagedKeys.entries()) {
     if (cacheKey.startsWith(storagePrefix)) {
       const cache = sharedCaches.get(cacheKey)!;
       const newValue = jsonParseAndFreeze(event.newValue);
-
-      console.log(
-        `[TrackedStorage] Updated cache for key "${event.key}" in cache "${cacheKey}"`,
-      );
-      console.log(`[TrackedStorage] New value:`, newValue);
 
       // Track or untrack key based on whether it was added or removed
       if (newValue !== null) {

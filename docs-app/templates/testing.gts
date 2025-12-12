@@ -1,11 +1,9 @@
 import { pageTitle } from 'ember-page-title';
 import { LinkTo } from '@ember/routing';
-import NavBar from '../components/nav-bar.gts';
+import { shiki } from '../modifiers/shiki';
 
 <template>
   {{pageTitle "Testing Guide"}}
-
-  <NavBar />
 
   <div class="container">
     <section class="doc-section">
@@ -25,7 +23,7 @@ import NavBar from '../components/nav-bar.gts';
       <h3>Testing with TrackedStorage or Pre-instantiated Instances</h3>
 
       <h4>Basic Setup</h4>
-      <pre>import { module, test } from 'qunit';
+      <pre {{shiki}}>import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { trackedLocalStorage } from 'ember-local-storage-decorator';
 
@@ -48,7 +46,9 @@ module('Integration | Component | my-component', function (hooks) {
         instances in your components or services, you have two options:
       </p>
 
-      <pre>import { TrackedStorage } from 'ember-local-storage-decorator';
+      <pre
+        {{shiki}}
+      >import { TrackedStorage } from 'ember-local-storage-decorator';
 
 // Option 1: Call clearCache() on each instance
 module('Integration | Component | my-component', function (hooks) {
@@ -88,7 +88,7 @@ module('Integration | Component | my-component', function (hooks) {
         caches:
       </p>
 
-      <pre>import { module, test } from 'qunit';
+      <pre {{shiki}}>import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import {
   clearLocalStorageCache,
@@ -116,7 +116,7 @@ module('Integration | Component | my-component', function (hooks) {
         has been applied, you must reinitialize the key:
       </p>
 
-      <pre>import {
+      <pre {{shiki}}>import {
   initializeLocalStorageKey,
   initializeSessionStorageKey,
   DEFAULT_PREFIX
@@ -164,7 +164,7 @@ test('some code relying on a value in session storage', function (assert) {
       <h3>Complete Test Examples</h3>
 
       <h4>Testing a Component with TrackedStorage</h4>
-      <pre>import { module, test } from 'qunit';
+      <pre {{shiki}}>import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { render } from '@ember/test-helpers';
 import { trackedLocalStorage } from 'ember-local-storage-decorator';
@@ -206,7 +206,7 @@ module('Integration | Component | user-profile', function (hooks) {
 });</pre>
 
       <h4>Testing a Component with Decorators</h4>
-      <pre>import { module, test } from 'qunit';
+      <pre {{shiki}}>import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { render, click } from '@ember/test-helpers';
 import {
@@ -256,7 +256,7 @@ module('Integration | Component | theme-switcher', function (hooks) {
 });</pre>
 
       <h3>Testing Services</h3>
-      <pre>import { module, test } from 'qunit';
+      <pre {{shiki}}>import { module, test } from 'qunit';
 import { setupTest } from 'ember-qunit';
 import { trackedLocalStorage } from 'ember-local-storage-decorator';
 
@@ -323,7 +323,7 @@ module('Unit | Service | user-preferences', function (hooks) {
       </div>
 
       <h3>Helper Functions Reference</h3>
-      <table class="api-table">
+      <table class="docs-table">
         <thead>
           <tr>
             <th>Function</th>

@@ -1,12 +1,9 @@
 import { pageTitle } from 'ember-page-title';
 import { LinkTo } from '@ember/routing';
-import NavBar from '../components/nav-bar.gts';
 import { shiki } from '../modifiers/shiki';
 
 <template>
-  {{pageTitle "Property Decorators - Ember Local Storage Decorator"}}
-
-  <NavBar />
+  {{pageTitle "Decorators - Ember Tracked Storage"}}
 
   <div class="container">
     <section class="doc-section">
@@ -180,7 +177,7 @@ export default class ShoppingCart extends Component {
         <code>TrackedStorage</code>
         or pre-instantiated instances?</p>
 
-      <table class="api-table">
+      <table class="docs-table">
         <thead>
           <tr>
             <th>Use Case</th>
@@ -206,12 +203,6 @@ export default class ShoppingCart extends Component {
           </tr>
           <tr>
             <td>Quick one-off usage</td>
-            <td><code>trackedLocalStorage</code>
-              /
-              <code>trackedSessionStorage</code></td>
-          </tr>
-          <tr>
-            <td>Shared service logic</td>
             <td><code>trackedLocalStorage</code>
               /
               <code>trackedSessionStorage</code></td>
