@@ -43,38 +43,25 @@ module('Integration | Component | my-component', function (hooks) {
       <p>
         If you're creating your own
         <code>TrackedStorage</code>
-        instances in your components or services, you have two options:
+        instances in your components or services, you will want to create an
+        instance with the same prefix in your tests to clear the cache:
       </p>
 
       <pre
         {{shiki}}
       >import { TrackedStorage } from 'ember-local-storage-decorator';
 
-// Option 1: Call clearCache() on each instance
+const storage = new TrackedStorage(window.localStorage, 'prefixUsedInApp');
+
 module('Integration | Component | my-component', function (hooks) {
   setupRenderingTest(hooks);
 
   hooks.beforeEach(function () {
     window.localStorage.clear();
-    this.storage = new TrackedStorage(window.localStorage, 'test');
+    storage.clearCache();
   });
 
   test('it works', function (assert) {
-    this.storage.setItem('key', 'value');
-    assert.strictEqual(this.storage.getItem('key'), 'value');
-  });
-});
-
-// Option 2: Create new instances for each test
-module('Integration | Component | my-component', function (hooks) {
-  setupRenderingTest(hooks);
-
-  hooks.beforeEach(function () {
-    window.localStorage.clear();
-  });
-
-  test('it works', function (assert) {
-    const storage = new TrackedStorage(window.localStorage, 'test');
     storage.setItem('key', 'value');
     assert.strictEqual(storage.getItem('key'), 'value');
   });
