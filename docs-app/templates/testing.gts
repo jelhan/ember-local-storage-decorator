@@ -2,6 +2,41 @@ import { pageTitle } from 'ember-page-title';
 import { LinkTo } from '@ember/routing';
 import { shiki } from '../modifiers/shiki';
 
+// this being in the template made eslint very unhappy :/
+const codeBlock = `import {
+  initializeLocalStorageKey,
+  initializeSessionStorageKey,
+  DEFAULT_PREFIX
+} from 'ember-local-storage-decorator';
+
+test('some code relying on a value in local storage', function (assert) {
+  // Manually set a value in storage
+  window.localStorage.setItem(
+    \`\${DEFAULT_PREFIX}:foo\`,
+    JSON.stringify('bar')
+  );
+
+  // Reinitialize the key so the decorator picks up the change
+  initializeLocalStorageKey('foo');
+
+  // Now your component will see the new value
+  // ...
+});
+
+test('some code relying on a value in session storage', function (assert) {
+  // Manually set a value in storage
+  window.sessionStorage.setItem(
+    \`\${DEFAULT_PREFIX}:foo\`,
+    JSON.stringify('bar')
+  );
+
+  // Reinitialize the key
+  initializeSessionStorageKey('foo');
+
+  // Now your component will see the new value
+  // ...
+});`;
+
 <template>
   {{pageTitle "Testing Guide"}}
 
@@ -43,7 +78,7 @@ module('Integration | Component | my-component', function (hooks) {
       <p>
         If you're creating your own
         <code>TrackedStorage</code>
-        instances in your components or services, you will want to create an
+        instances in your components or services, will want to create an
         instance with the same prefix in your tests to clear the cache:
       </p>
 
@@ -103,39 +138,7 @@ module('Integration | Component | my-component', function (hooks) {
         has been applied, you must reinitialize the key:
       </p>
 
-      <pre {{shiki}}>import {
-  initializeLocalStorageKey,
-  initializeSessionStorageKey,
-  DEFAULT_PREFIX
-} from 'ember-local-storage-decorator';
-
-test('some code relying on a value in local storage', function (assert) {
-  // Manually set a value in storage
-  window.localStorage.setItem(
-    `${DEFAULT_PREFIX}:foo`,
-    JSON.stringify('bar')
-  );
-
-  // Reinitialize the key so the decorator picks up the change
-  initializeLocalStorageKey('foo');
-
-  // Now your component will see the new value
-  // ...
-});
-
-test('some code relying on a value in session storage', function (assert) {
-  // Manually set a value in storage
-  window.sessionStorage.setItem(
-    `${DEFAULT_PREFIX}:foo`,
-    JSON.stringify('bar')
-  );
-
-  // Reinitialize the key
-  initializeSessionStorageKey('foo');
-
-  // Now your component will see the new value
-  // ...
-});</pre>
+      <pre {{shiki}}>{{codeBlock}}</pre>
 
       <div class="note">
         <strong>Remember:</strong>
