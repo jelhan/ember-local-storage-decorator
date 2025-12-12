@@ -70,11 +70,11 @@ import { trackedLocalStorage, trackedSessionStorage } from 'ember-local-storage-
 import Component from '@glimmer/component';
 
 export default class MyComponent extends Component {
-  get currentUser() {
+  get user() {
     return trackedLocalStorage.getItem('user');
   }
 
-  saveUser = (user) => {
+  updateUser = (user) => {
     trackedLocalStorage.setItem('user', user);
   }
 }
@@ -98,42 +98,45 @@ export default class MyComponent extends Component {
 
 The decorators attach a getter to read the value from storage and a setter to write changes to storage.
 
-### Basic Usage
+#### Basic Usage
 
 ```js
 const Klass = class {
-  @localStorage foo;
+  @localStorage user;
+  @sessionStorage tempData;
 }
 const klass = new Klass();
 
-klass.foo = 'baz';
-klass.foo; // 'baz'
+klass.user = 'Jane';
+klass.user; // 'Jane'
+
+klass.tempData = { chatRoomId: 42 };
+klass.tempData; // { chatRoomId: 42 }
 ```
 
-### Custom Storage Key
+#### Custom Storage Key
 
 You may specify a different key to be used in storage:
 
 ```js
 const Klass = class {
-  @localStorage('bar') foo;
+  @localStorage('user') currentUser;
+  @sessionStorage('tempData') sessionInfo;
 };
 const klass = new Klass();
 
-klass.foo = 'baz'; // stored under key 'bar'
+klass.currentUser = 'Jane'; // stored under key 'user'
+klass.currentUser; // 'Jane'
+window.localStorage.getItem('__tracked_storage__:user'); // '"Jane"'
+
+klass.tempData = { chatRoomId: 42 };
+klass.tempData; // { chatRoomId: 42 }
+window.sessionStorage.getItem('__tracked_storage__:tempData'); // '{"chatRoomId":42}'
+
 ```
 
-### `@sessionStorage` Decorator
+#### Default Values
 
-The `@sessionStorage` decorator works identically to `@localStorage` but uses `window.sessionStorage` instead:
-
-```js
-const Klass = class {
-  @sessionStorage tempData;
-};
-```
-
-### Default Values
 You can provide a default value that will be used if no value exists in storage:
 
 ```js
@@ -143,6 +146,10 @@ const Klass = class {
 };
 ```
 
+### Manipulating Storage Directly
+
+Due to limitations of the Web Storage API, direct changes to the storage bypassing the decorator or TrackedStorage instances can not be observed. Therefore you _should not_ manipulate `window.localStorage` or `window.sessionStorage` directly.
+
 ## ⭐ Common Features
 
 All three approaches share these characteristics:
@@ -151,6 +158,7 @@ All three approaches share these characteristics:
 Values are stored as JSON strings. Only values that can be serialized to JSON are supported.
 
 ### Deep Freezing
+
 Objects and arrays are deep frozen to prevent accidental mutation:
 
 ```js
@@ -162,7 +170,8 @@ Object.isFrozen(data.items); // true
 ```
 
 ### Cross-Instance Reactivity
-Changes are automatically observed across different class instances and respond to StorageEvents from other tabs:
+
+Changes are automatically observed across different class instances and respond to [`StorageEvent`s](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent) from other tabs:
 
 ```js
 const instanceA = new TrackedStorage(window.localStorage);
@@ -175,13 +184,15 @@ instanceB.getItem('foo'); // 'bar'
 window.dispatchEvent(
   new StorageEvent('storage', { 
     key: '__tracked_storage__:foo', 
-    newValue: '"baz"' 
+    newValue: '"baz"',
+    storageArea: window.localStorage,
   })
 );
 instanceA.getItem('foo'); // 'baz'
 ```
 
 ### Prefix Isolation
+
 TrackedStorage uses a prefix system (default: `__tracked_storage__`) to namespace its keys and avoid conflicts with other code using the same storage. The decorators use TrackedStorage internally, so they also benefit from this isolation.
 
 ## 🧪 Testing
