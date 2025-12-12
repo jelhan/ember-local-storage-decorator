@@ -87,7 +87,7 @@ export default class NavBar extends Component {
             <ul class="section-links">
               <li>
                 <a
-                  href="https://github.com/evoactivity/ember-local-storage-decorator"
+                  href="https://github.com/jelhan/ember-local-storage-decorator"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="external-link"
