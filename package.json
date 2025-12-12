@@ -42,6 +42,8 @@
     "lint:types": "ember-tsc --noEmit",
     "prepack": "rollup --config",
     "start": "vite dev",
+    "build:docs": "vite build --mode=production --outDir docs",
+    "preview": "vite preview --outDir docs",
     "test": "vite build --mode=development --out-dir dist-tests && testem --file testem.cjs ci --port 0"
   },
   "dependencies": {
