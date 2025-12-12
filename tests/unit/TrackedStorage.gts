@@ -649,6 +649,42 @@ storageTypes.forEach(({ name, storage: windowStorage }) => {
 
         // Should not throw
       });
+
+      test('updates cache when storage event removes an item', function (assert) {
+        // Set up initial value
+        storage.setItem('test', 'initial_value');
+        assert.equal(
+          storage.getItem('test'),
+          'initial_value',
+          'initial value set',
+        );
+
+        // Simulate another tab removing the value
+        windowStorage.removeItem(`${DEFAULT_PREFIX}:test`);
+        window.dispatchEvent(
+          new StorageEvent('storage', {
+            key: `${DEFAULT_PREFIX}:test`,
+            oldValue: JSON.stringify('initial_value'),
+            newValue: null,
+            storageArea: windowStorage,
+          }),
+        );
+
+        // Verify the cache is updated and returns null
+        assert.equal(
+          storage.getItem('test'),
+          null,
+          'cache updated to reflect removed item',
+        );
+
+        // Verify the key is no longer in the keys list
+        assert.equal(storage.key(0), null, 'key removed from keys list');
+        assert.equal(
+          storage.length,
+          0,
+          'length updated to reflect removed item',
+        );
+      });
     });
   });
 });

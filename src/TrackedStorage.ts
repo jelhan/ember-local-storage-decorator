@@ -42,16 +42,17 @@ window.addEventListener('storage', (event: StorageEvent) => {
 
   // Update all caches for this storage type that have this key
   for (const [cacheKey, managedKeys] of sharedManagedKeys.entries()) {
-    if (cacheKey.startsWith(storagePrefix) && managedKeys.has(event.key)) {
+    if (cacheKey.startsWith(storagePrefix)) {
       const cache = sharedCaches.get(cacheKey)!;
       const newValue = jsonParseAndFreeze(event.newValue);
-      cache.set(event.key, newValue);
 
       // Track or untrack key based on whether it was added or removed
       if (newValue !== null) {
         managedKeys.add(event.key);
+        cache.set(event.key, newValue);
       } else {
         managedKeys.delete(event.key);
+        cache.delete(event.key);
       }
     }
   }
