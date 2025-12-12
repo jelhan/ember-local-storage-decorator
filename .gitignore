@@ -3,6 +3,7 @@ dist/
 dist-tests/
 declarations/
 
+
 # from scenarios
 tmp/
 config/optional-features.json
@@ -16,3 +17,4 @@ node_modules/
 .eslintcache
 .prettiercache
 demo-dist
+docs/
