@@ -255,6 +255,28 @@ storageTypes.forEach(
           assert.equal(new Foo().foo, 'bar');
         });
       });
+
+      test('reinitializing a key works as expected', function (assert) {
+        class TestClass {
+          @decorator foo: any;
+        }
+
+        const klass = new TestClass();
+
+        // initial state
+        assert.equal(klass.foo, null);
+
+        // clear cache to simulate test setup
+        storage.clear();
+        clearCache();
+
+        // set a directly on storage
+        storage.setItem(`${DEFAULT_PREFIX}:foo`, JSON.stringify('bar'));
+        initializeKey('foo');
+
+        // after re-initialization, the value should match storage
+        assert.equal(klass.foo, 'bar');
+      });
     });
   },
 );
