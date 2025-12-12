@@ -157,7 +157,7 @@ export default class Index extends Component {
   };
 
   <template>
-    {{pageTitle "Home - Ember Tracked Storage"}}
+    {{pageTitle "Home"}}
 
     <section class="hero">
       <h1>Ember Tracked Storage</h1>

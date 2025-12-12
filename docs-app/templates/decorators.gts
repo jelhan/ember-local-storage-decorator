@@ -3,7 +3,7 @@ import { LinkTo } from '@ember/routing';
 import { shiki } from '../modifiers/shiki';
 
 <template>
-  {{pageTitle "Decorators - Ember Tracked Storage"}}
+  {{pageTitle "Decorators"}}
 
   <div class="container">
     <section class="doc-section">
