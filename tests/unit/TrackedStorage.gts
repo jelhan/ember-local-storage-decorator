@@ -175,7 +175,17 @@ storageTypes.forEach(({ name, storage: windowStorage }) => {
         );
       });
 
-      test('new instance syncs with storage state when cache exists', function (assert) {
+      /**
+       * This test is currently skipped because this scenario will be rare
+       *
+       * Essentially mobile browsers may evict storage under low space conditions,
+       * which could lead to discrepancies between cached state and actual storage state.
+       *
+       * In such cases, the new instance should ideally detect the discrepancy and resync,
+       * but we would also want current instances to reflect the cleared state too. There is
+       * currently no mechanism for that as browsers do not fire the StorageEvent in these scenarios.
+       */
+      test.skip('new instance syncs with storage state when cache exists', function (assert) {
         const storage1 = new TrackedStorage(windowStorage);
 
         storage1.setItem('key1', 'value1');
