@@ -193,10 +193,7 @@ export class TrackedStorage {
    * Clear all items from storage that match our prefix.
    */
   clear = (): void => {
-    // Create a copy of keys to avoid modification during iteration
-    const keysToRemove = Array.from(this.#managedKeys);
-
-    for (const key of keysToRemove) {
+    for (const key of this.#managedKeys) {
       this.#storage.removeItem(key);
     }
 
