@@ -20,19 +20,11 @@ function jsonParseAndFreeze(json: string | null | undefined): unknown {
 export const DEFAULT_PREFIX = '__tracked_storage__';
 
 // Module-level shared caches and managed keys, keyed by storage+prefix
-const sharedCaches = new Map<string, TrackedMap<string, unknown>>();
-const sharedManagedKeys = new Map<string, Set<string>>();
-
-// Get a unique key for cache lookup
-function getCacheKey(storage: Storage, prefix: string): string {
-  let storagePrefix = 'custom:';
-  if (storage === window.localStorage) {
-    storagePrefix = 'local:';
-  } else if (storage === window.sessionStorage) {
-    storagePrefix = 'session:';
-  }
-  return `${storagePrefix}${prefix}`;
-}
+const sharedCaches = new Map<
+  Storage,
+  Map<string, TrackedMap<string, unknown>>
+>();
+const sharedManagedKeys = new Map<Storage, Map<string, Set<string>>>();
 
 // Setup storage event listener once at module level
 // For localStorage: syncs changes across tabs
@@ -49,12 +41,9 @@ window.addEventListener('storage', (event: StorageEvent) => {
   }
   const prefix = event.key.slice(0, colonIndex);
 
-  // Construct the cache key directly using the getCacheKey helper
-  const cacheKey = getCacheKey(event.storageArea, prefix);
-
   // Check if we have a cache for this prefix
-  const cache = sharedCaches.get(cacheKey);
-  const managedKeys = sharedManagedKeys.get(cacheKey);
+  const cache = sharedCaches.get(event.storageArea)?.get(prefix);
+  const managedKeys = sharedManagedKeys.get(event.storageArea)?.get(prefix);
 
   if (!cache || !managedKeys) {
     return; // No cache exists for this prefix
@@ -93,20 +82,20 @@ export class TrackedStorage {
   #storage: Storage;
   #cache: TrackedMap<string, unknown>;
   #managedKeys: Set<string>;
-  #cacheKey: string;
 
   constructor(storage: Storage, prefix?: string) {
     this.#storage = storage;
     this.#prefix = prefix ?? DEFAULT_PREFIX;
-    this.#cacheKey = getCacheKey(storage, this.#prefix);
 
     // Get or create shared cache and managed keys for this storage+prefix combination
-    if (!sharedCaches.has(this.#cacheKey)) {
+    if (!sharedCaches.get(this.#storage)?.has(this.#prefix)) {
       this.#createCache();
     }
 
-    this.#cache = sharedCaches.get(this.#cacheKey)!;
-    this.#managedKeys = sharedManagedKeys.get(this.#cacheKey)!;
+    this.#cache = sharedCaches.get(this.#storage)!.get(this.#prefix)!;
+    this.#managedKeys = sharedManagedKeys
+      .get(this.#storage)!
+      .get(this.#prefix)!;
   }
 
   /**
@@ -116,8 +105,14 @@ export class TrackedStorage {
     const cache = new TrackedMap<string, unknown>(new Map());
     const managedKeys = new Set<string>();
 
-    sharedCaches.set(this.#cacheKey, cache);
-    sharedManagedKeys.set(this.#cacheKey, managedKeys);
+    sharedCaches.set(
+      this.#storage,
+      new Map<string, TrackedMap<string, unknown>>(),
+    );
+    sharedManagedKeys.set(this.#storage, new Map<string, Set<string>>());
+
+    sharedCaches.get(this.#storage)?.set(this.#prefix, cache);
+    sharedManagedKeys.get(this.#storage)?.set(this.#prefix, managedKeys);
   };
 
   /**
@@ -157,8 +152,7 @@ export class TrackedStorage {
       return null;
     }
 
-    // Key exists in storage but not cache - this shouldn't normally happen
-    // since we initialize the cache in constructor, but handle it gracefully
+    // Key exists in storage but not cache, parse and cache it
     const value = jsonParseAndFreeze(rawValue);
     this.#cache.set(prefixedKey, value);
     return value as T | null;
@@ -248,7 +242,9 @@ export class TrackedStorage {
     sharedCaches.clear();
     sharedManagedKeys.clear();
     this.#createCache();
-    this.#cache = sharedCaches.get(this.#cacheKey)!;
-    this.#managedKeys = sharedManagedKeys.get(this.#cacheKey)!;
+    this.#cache = sharedCaches.get(this.#storage)!.get(this.#prefix)!;
+    this.#managedKeys = sharedManagedKeys
+      .get(this.#storage)!
+      .get(this.#prefix)!;
   };
 }
