@@ -86,10 +86,25 @@ export class TrackedStorage {
   constructor(storage: Storage, prefix?: string) {
     this.#storage = storage;
     this.#prefix = prefix ?? DEFAULT_PREFIX;
+    const existingCaches = sharedCaches.get(this.#storage);
+    const existingManagedKeys = sharedManagedKeys.get(this.#storage);
+    const cacheWithPrefixExists =
+      existingCaches && existingCaches.has(this.#prefix);
+    const managedKeysWithPrefixExists =
+      existingManagedKeys && existingManagedKeys.has(this.#prefix);
 
-    // Get or create shared cache and managed keys for this storage+prefix combination
-    if (!sharedCaches.get(this.#storage)?.has(this.#prefix)) {
-      this.#createCache();
+    if (!cacheWithPrefixExists || !managedKeysWithPrefixExists) {
+      const cache = new TrackedMap<string, unknown>(new Map());
+      const managedKeys = new Set<string>();
+
+      sharedCaches.set(
+        this.#storage,
+        new Map<string, TrackedMap<string, unknown>>(),
+      );
+      sharedManagedKeys.set(this.#storage, new Map<string, Set<string>>());
+
+      sharedCaches.get(this.#storage)!.set(this.#prefix, cache);
+      sharedManagedKeys.get(this.#storage)!.set(this.#prefix, managedKeys);
     }
 
     this.#cache = sharedCaches.get(this.#storage)!.get(this.#prefix)!;
@@ -97,23 +112,6 @@ export class TrackedStorage {
       .get(this.#storage)!
       .get(this.#prefix)!;
   }
-
-  /**
-   * Reset the cache to a fresh state
-   */
-  #createCache = (): void => {
-    const cache = new TrackedMap<string, unknown>(new Map());
-    const managedKeys = new Set<string>();
-
-    sharedCaches.set(
-      this.#storage,
-      new Map<string, TrackedMap<string, unknown>>(),
-    );
-    sharedManagedKeys.set(this.#storage, new Map<string, Set<string>>());
-
-    sharedCaches.get(this.#storage)?.set(this.#prefix, cache);
-    sharedManagedKeys.get(this.#storage)?.set(this.#prefix, managedKeys);
-  };
 
   /**
    * Build the full storage key with prefix
@@ -233,18 +231,5 @@ export class TrackedStorage {
   clearCache = (): void => {
     this.#cache.clear();
     this.#managedKeys.clear();
-  };
-
-  /**
-   * Clear all shared caches. Useful for tests.
-   */
-  clearSharedCache = (): void => {
-    sharedCaches.clear();
-    sharedManagedKeys.clear();
-    this.#createCache();
-    this.#cache = sharedCaches.get(this.#storage)!.get(this.#prefix)!;
-    this.#managedKeys = sharedManagedKeys
-      .get(this.#storage)!
-      .get(this.#prefix)!;
   };
 }
