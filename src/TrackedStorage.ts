@@ -19,7 +19,7 @@ function jsonParseAndFreeze(json: string | null | undefined): unknown {
 
 export const DEFAULT_PREFIX = '__tracked_storage__';
 
-// Module-level shared caches and managed keys, keyed by storage+prefix
+// Module-level shared caches keyed by storage+prefix
 const sharedCaches = new Map<
   Storage,
   Map<string, TrackedMap<string, unknown>>
@@ -117,9 +117,6 @@ export class TrackedStorage {
   /**
    * Get an item from storage. Returns the parsed value or null if not found.
    * Objects and arrays are deep frozen to prevent mutation.
-   *
-   * Note: This method accesses the cache for reactivity. Values that don't exist
-   * in storage will return null without being cached to avoid tracking violations.
    */
   getItem = <T = unknown>(key: string): T | null => {
     const prefixedKey = this.#buildKey(key);
