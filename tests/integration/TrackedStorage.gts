@@ -246,6 +246,61 @@ storageTypes.forEach(({ name, storage: windowStorage }) => {
       assert.equal(newStorage.getItem('existing'), 'preexisting');
     });
 
+    test('item that is null is still reactive', async function (assert) {
+      windowStorage.setItem(`${DEFAULT_PREFIX}:nullable`, JSON.stringify(null));
+      class TestComponent extends Component {
+        storage = storage;
+
+        setValue = () => {
+          this.storage.setItem('nullable', 'value');
+        };
+
+        <template>
+          <div data-test-value>{{this.storage.getItem "nullable"}}</div>
+          <button
+            type="button"
+            {{on "click" this.setValue}}
+            data-test-btn
+          ></button>
+        </template>
+      }
+
+      await render(<template><TestComponent /></template>);
+      assert.dom('[data-test-value]').hasText('');
+
+      await click('[data-test-btn]');
+      assert.dom('[data-test-value]').hasText('value');
+    });
+
+    test('item that is uninitialized is still reactive', async function (assert) {
+      windowStorage.setItem(
+        `${DEFAULT_PREFIX}:nullable`,
+        JSON.stringify('test'),
+      );
+      class TestComponent extends Component {
+        storage = storage;
+
+        setValue = () => {
+          this.storage.setItem('nullable', 'value');
+        };
+
+        <template>
+          <div data-test-value>{{this.storage.getItem "nullable"}}</div>
+          <button
+            type="button"
+            {{on "click" this.setValue}}
+            data-test-btn
+          ></button>
+        </template>
+      }
+
+      await render(<template><TestComponent /></template>);
+      assert.dom('[data-test-value]').hasText('test');
+
+      await click('[data-test-btn]');
+      assert.dom('[data-test-value]').hasText('value');
+    });
+
     test('setting value to null removes it from storage', function (assert) {
       storage.setItem('test', 'initial value');
       assert.equal(storage.getItem('test'), 'initial value');

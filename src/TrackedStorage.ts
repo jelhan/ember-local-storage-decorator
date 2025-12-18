@@ -138,21 +138,13 @@ export class TrackedStorage {
   getItem = <T = unknown>(key: string): T | null => {
     const prefixedKey = this.#buildKey(key);
 
-    // Check if the key is tracked in our cache
+    // Check if the key is already in our cache
     if (this.#cache.has(prefixedKey)) {
       return this.#cache.get(prefixedKey) as T | null;
     }
 
-    // For keys not in cache, check if they exist in storage
-    // If they don't exist, return null without caching to avoid tracking violations
     const rawValue = this.#storage.getItem(prefixedKey);
-    if (rawValue === null) {
-      return null;
-    }
-
-    // Key exists in storage but not cache, parse and cache it
     const value = jsonParseAndFreeze(rawValue);
-    this.#cache.set(prefixedKey, value);
     return value as T | null;
   };
 
@@ -169,11 +161,11 @@ export class TrackedStorage {
     const prefixedKey = this.#buildKey(key);
     const json = JSON.stringify(value);
 
-    // Update cache with frozen copy
-    this.#cache.set(prefixedKey, jsonParseAndFreeze(json));
-
     // Track this key
     this.#managedKeys.add(prefixedKey);
+
+    // Update cache with frozen copy
+    this.#cache.set(prefixedKey, jsonParseAndFreeze(json));
 
     // Update storage
     this.#storage.setItem(prefixedKey, json);
@@ -196,7 +188,6 @@ export class TrackedStorage {
     for (const key of this.#managedKeys) {
       this.#storage.removeItem(key);
     }
-
     this.#cache.clear();
     this.#managedKeys.clear();
   };
