@@ -22,7 +22,7 @@ storageTypes.forEach(({ name, storage: windowStorage }) => {
     hooks.beforeEach(function () {
       windowStorage.clear();
       storage = new TrackedStorage(windowStorage);
-      storage.clearCache();
+      storage.clearSharedCache();
     });
 
     module('constructor', function () {

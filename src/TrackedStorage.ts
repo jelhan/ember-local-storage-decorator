@@ -25,7 +25,13 @@ const sharedManagedKeys = new Map<string, Set<string>>();
 
 // Get a unique key for cache lookup
 function getCacheKey(storage: Storage, prefix: string): string {
-  return `${storage === window.localStorage ? 'local' : 'session'}:${prefix}`;
+  let storagePrefix = 'custom:';
+  if (storage === window.localStorage) {
+    storagePrefix = 'local:';
+  } else if (storage === window.sessionStorage) {
+    storagePrefix = 'session:';
+  }
+  return `${storagePrefix}${prefix}`;
 }
 
 // Setup storage event listener once at module level
@@ -36,25 +42,33 @@ window.addEventListener('storage', (event: StorageEvent) => {
     return;
   }
 
-  // Determine the storage type prefix for filtering
-  const storagePrefix =
-    event.storageArea === window.localStorage ? 'local:' : 'session:';
+  // Extract the prefix from the event key (e.g., '__tracked_storage__:foo' -> '__tracked_storage__')
+  const colonIndex = event.key.indexOf(':');
+  if (colonIndex === -1) {
+    return; // Not a prefixed key
+  }
+  const prefix = event.key.slice(0, colonIndex);
 
-  // Update all caches for this storage type that have this key
-  for (const [cacheKey, managedKeys] of sharedManagedKeys.entries()) {
-    if (cacheKey.startsWith(storagePrefix)) {
-      const cache = sharedCaches.get(cacheKey)!;
-      const newValue = jsonParseAndFreeze(event.newValue);
+  // Construct the cache key directly using the getCacheKey helper
+  const cacheKey = getCacheKey(event.storageArea, prefix);
 
-      // Track or untrack key based on whether it was added or removed
-      if (newValue !== null) {
-        managedKeys.add(event.key);
-        cache.set(event.key, newValue);
-      } else {
-        managedKeys.delete(event.key);
-        cache.delete(event.key);
-      }
-    }
+  // Check if we have a cache for this prefix
+  const cache = sharedCaches.get(cacheKey);
+  const managedKeys = sharedManagedKeys.get(cacheKey);
+
+  if (!cache || !managedKeys) {
+    return; // No cache exists for this prefix
+  }
+
+  const newValue = jsonParseAndFreeze(event.newValue);
+
+  // Track or untrack key based on whether it was added or removed
+  if (newValue !== null) {
+    managedKeys.add(event.key);
+    cache.set(event.key, newValue);
+  } else {
+    managedKeys.delete(event.key);
+    cache.delete(event.key);
   }
 });
 
@@ -88,37 +102,23 @@ export class TrackedStorage {
 
     // Get or create shared cache and managed keys for this storage+prefix combination
     if (!sharedCaches.has(this.#cacheKey)) {
-      const cache = new TrackedMap<string, unknown>(new Map());
-      const managedKeys = new Set<string>();
-
-      sharedCaches.set(this.#cacheKey, cache);
-      sharedManagedKeys.set(this.#cacheKey, managedKeys);
+      this.#createCache();
     }
 
     this.#cache = sharedCaches.get(this.#cacheKey)!;
     this.#managedKeys = sharedManagedKeys.get(this.#cacheKey)!;
-
-    // Sync cache with storage: remove cached keys that no longer exist in storage
-    for (const cachedKey of Array.from(this.#managedKeys)) {
-      if (storage.getItem(cachedKey) === null) {
-        this.#cache.delete(cachedKey);
-        this.#managedKeys.delete(cachedKey);
-      }
-    }
-
-    // Add any new keys from storage that match our prefix
-    for (let i = 0; i < storage.length; i++) {
-      const key = storage.key(i);
-      if (
-        key &&
-        key.startsWith(`${this.#prefix}:`) &&
-        !this.#managedKeys.has(key)
-      ) {
-        this.#cache.set(key, jsonParseAndFreeze(storage.getItem(key)));
-        this.#managedKeys.add(key);
-      }
-    }
   }
+
+  /**
+   * Reset the cache to a fresh state
+   */
+  #createCache = (): void => {
+    const cache = new TrackedMap<string, unknown>(new Map());
+    const managedKeys = new Set<string>();
+
+    sharedCaches.set(this.#cacheKey, cache);
+    sharedManagedKeys.set(this.#cacheKey, managedKeys);
+  };
 
   /**
    * Build the full storage key with prefix
@@ -238,5 +238,17 @@ export class TrackedStorage {
    */
   clearCache = (): void => {
     this.#cache.clear();
+    this.#managedKeys.clear();
+  };
+
+  /**
+   * Clear all shared caches. Useful for tests.
+   */
+  clearSharedCache = (): void => {
+    sharedCaches.clear();
+    sharedManagedKeys.clear();
+    this.#createCache();
+    this.#cache = sharedCaches.get(this.#cacheKey)!;
+    this.#managedKeys = sharedManagedKeys.get(this.#cacheKey)!;
   };
 }
