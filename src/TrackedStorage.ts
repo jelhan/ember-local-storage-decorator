@@ -24,7 +24,6 @@ const sharedCaches = new Map<
   Storage,
   Map<string, TrackedMap<string, unknown>>
 >();
-const sharedManagedKeys = new Map<Storage, Map<string, Set<string>>>();
 
 // Setup storage event listener once at module level
 // For localStorage: syncs changes across tabs
@@ -43,9 +42,8 @@ window.addEventListener('storage', (event: StorageEvent) => {
 
   // Check if we have a cache for this prefix
   const cache = sharedCaches.get(event.storageArea)?.get(prefix);
-  const managedKeys = sharedManagedKeys.get(event.storageArea)?.get(prefix);
 
-  if (!cache || !managedKeys) {
+  if (!cache) {
     return; // No cache exists for this prefix
   }
 
@@ -53,10 +51,8 @@ window.addEventListener('storage', (event: StorageEvent) => {
 
   // Track or untrack key based on whether it was added or removed
   if (newValue !== null) {
-    managedKeys.add(event.key);
     cache.set(event.key, newValue);
   } else {
-    managedKeys.delete(event.key);
     cache.delete(event.key);
   }
 });
@@ -81,36 +77,26 @@ export class TrackedStorage {
   #prefix: string;
   #storage: Storage;
   #cache: TrackedMap<string, unknown>;
-  #managedKeys: Set<string>;
 
   constructor(storage: Storage, prefix?: string) {
     this.#storage = storage;
     this.#prefix = prefix ?? DEFAULT_PREFIX;
     const existingCaches = sharedCaches.get(this.#storage);
-    const existingManagedKeys = sharedManagedKeys.get(this.#storage);
     const cacheWithPrefixExists =
       existingCaches && existingCaches.has(this.#prefix);
-    const managedKeysWithPrefixExists =
-      existingManagedKeys && existingManagedKeys.has(this.#prefix);
 
-    if (!cacheWithPrefixExists || !managedKeysWithPrefixExists) {
+    if (!cacheWithPrefixExists) {
       const cache = new TrackedMap<string, unknown>(new Map());
-      const managedKeys = new Set<string>();
 
       sharedCaches.set(
         this.#storage,
         new Map<string, TrackedMap<string, unknown>>(),
       );
-      sharedManagedKeys.set(this.#storage, new Map<string, Set<string>>());
 
       sharedCaches.get(this.#storage)!.set(this.#prefix, cache);
-      sharedManagedKeys.get(this.#storage)!.set(this.#prefix, managedKeys);
     }
 
     this.#cache = sharedCaches.get(this.#storage)!.get(this.#prefix)!;
-    this.#managedKeys = sharedManagedKeys
-      .get(this.#storage)!
-      .get(this.#prefix)!;
   }
 
   /**
@@ -161,9 +147,6 @@ export class TrackedStorage {
     const prefixedKey = this.#buildKey(key);
     const json = JSON.stringify(value);
 
-    // Track this key
-    this.#managedKeys.add(prefixedKey);
-
     // Update cache with frozen copy
     this.#cache.set(prefixedKey, jsonParseAndFreeze(json));
 
@@ -177,7 +160,6 @@ export class TrackedStorage {
   removeItem = (key: string): void => {
     const prefixedKey = this.#buildKey(key);
     this.#cache.delete(prefixedKey);
-    this.#managedKeys.delete(prefixedKey);
     this.#storage.removeItem(prefixedKey);
   };
 
@@ -185,11 +167,10 @@ export class TrackedStorage {
    * Clear all items from storage that match our prefix.
    */
   clear = (): void => {
-    for (const key of this.#managedKeys) {
+    for (const key of this.#cache.keys()) {
       this.#storage.removeItem(key);
     }
     this.#cache.clear();
-    this.#managedKeys.clear();
   };
 
   /**
@@ -197,11 +178,11 @@ export class TrackedStorage {
    * Only returns keys that match our prefix.
    */
   key = (index: number): string | null => {
-    if (index < 0 || index >= this.#managedKeys.size) {
+    if (index < 0 || index >= this.#cache.size) {
       return null;
     }
 
-    const key = Array.from(this.#managedKeys)[index];
+    const key = Array.from(this.#cache.keys())[index];
     return key ? this.#stripPrefix(key) : null;
   };
 
@@ -218,6 +199,5 @@ export class TrackedStorage {
    */
   clearCache = (): void => {
     this.#cache.clear();
-    this.#managedKeys.clear();
   };
 }
