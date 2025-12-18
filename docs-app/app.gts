@@ -1,12 +1,12 @@
 import EmberApp from 'ember-strict-application-resolver';
-import EmberRouter from '@ember/routing/router';
+import EmberRouter from './router.ts';
 import PageTitleService from 'ember-page-title/services/page-title';
-
+import RouterScrollService from '@nullvoxpopuli/ember-router-scroll/services/router-scroll';
+import RouterService from '@ember/routing/router-service';
 class Router extends EmberRouter {
   location = 'history';
   rootURL = '/';
 }
-
 export class App extends EmberApp {
   /**
    * Any services or anything from the addon that needs to be in the app-tree registry
@@ -20,6 +20,8 @@ export class App extends EmberApp {
   modules = {
     './router': Router,
     './services/page-title': PageTitleService,
+    './services/router': RouterService,
+    './services/router-scroll': RouterScrollService,
     /**
      * NOTE: this glob will import everything matching the glob,
      *     and includes non-services in the services directory.
@@ -34,5 +36,3 @@ export class App extends EmberApp {
     ...import.meta.glob('./templates/**/*', { eager: true }),
   };
 }
-
-Router.map(function () {});
