@@ -40,7 +40,7 @@ window.addEventListener('storage', (event: StorageEvent) => {
   }
   const prefix = event.key.slice(0, colonIndex);
 
-  // Check if we have a cache for this prefix
+  // Check if we have a cache for this combination of storage and prefix
   const cache = sharedCaches.get(event.storageArea)?.get(prefix);
 
   if (!cache) {
