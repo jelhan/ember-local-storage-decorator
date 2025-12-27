@@ -19,7 +19,7 @@ function jsonParseAndFreeze(json: string | null | undefined): unknown {
 
 export const DEFAULT_PREFIX = '__tracked_storage__';
 
-// Module-level shared caches keyed by storage+prefix
+// Module-level shared caches keyed by storage (first level) and prefix (second level)
 const sharedCaches = new Map<
   Storage,
   Map<string, TrackedMap<string, unknown>>
