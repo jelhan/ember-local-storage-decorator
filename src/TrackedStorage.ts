@@ -44,7 +44,7 @@ window.addEventListener('storage', (event: StorageEvent) => {
   const cache = sharedCaches.get(event.storageArea)?.get(prefix);
 
   if (!cache) {
-    return; // No cache exists for this prefix
+    return; // No cache exists for this combination of storage and prefix
   }
 
   const newValue = jsonParseAndFreeze(event.newValue);
