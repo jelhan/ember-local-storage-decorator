@@ -79,8 +79,8 @@ importers:
         specifier: ^2.19.12
         version: 2.19.13
       babel-plugin-ember-template-compilation:
-        specifier: ^3.0.0
-        version: 3.0.1
+        specifier: ^4.0.0
+        version: 4.0.0
       concurrently:
         specifier: ^9.0.1
         version: 9.2.1
@@ -1837,6 +1837,10 @@ packages:
 
   babel-plugin-ember-template-compilation@3.0.1:
     resolution: {integrity: sha512-3fUgnv+azabsl2PMd+SpkV8E7vvp7oRLaXv+OJIe36G3niSVYDKJ+7n6WaPyh+z7gqeAKSBj7Bdc5dYbhEMsgQ==}
+    engines: {node: '>= 18.*'}
+
+  babel-plugin-ember-template-compilation@4.0.0:
+    resolution: {integrity: sha512-J2dR6ZPfPNuIR7vzhneO9xR0aTvOHITszuGif2EOYw3Qg3KlIVEd/hNnEeubyWgjYXn06Sgm6/NdNXEMNSsWYQ==}
     engines: {node: '>= 18.*'}
 
   babel-plugin-htmlbars-inline-precompile@5.3.1:
@@ -5715,6 +5719,7 @@ packages:
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
   terser@5.44.1:
     resolution: {integrity: sha512-t/R3R/n0MSwnnazuPpPNVO60LX0SKL45pyl9YlvxIdkH0Of7D5qM2EVe+yASRIlY5pZ73nclYJfNANGWPwFDZw==}
@@ -6172,6 +6177,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
@@ -8400,6 +8406,12 @@ snapshots:
       babel-import-util: 3.0.1
 
   babel-plugin-ember-template-compilation@3.0.1:
+    dependencies:
+      '@glimmer/syntax': 0.95.0
+      babel-import-util: 3.0.1
+      import-meta-resolve: 4.2.0
+
+  babel-plugin-ember-template-compilation@4.0.0:
     dependencies:
       '@glimmer/syntax': 0.95.0
       babel-import-util: 3.0.1
