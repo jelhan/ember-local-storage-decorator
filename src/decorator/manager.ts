@@ -2,24 +2,7 @@ import type {
   DecoratorPropertyDescriptor,
   ElementDescriptor,
 } from '@ember/-internals/metal';
-import { TrackedMap } from 'tracked-built-ins';
-
-// like JSON.parse() but all returned objects are frozen
-function jsonParseAndFreeze(json: string | null | undefined): unknown {
-  if (!json) {
-    return undefined;
-  }
-
-  const parsed: unknown = JSON.parse(
-    json,
-    (_key: string, value: unknown): unknown =>
-      typeof value === 'object' && value !== null
-        ? Object.freeze(value)
-        : value,
-  );
-
-  return parsed;
-}
+import { TrackedStorage } from '../TrackedStorage.ts';
 
 // This will detect if the function arguments match the legacy decorator pattern
 function isElementDescriptor(...args: unknown[]): boolean {
@@ -45,50 +28,16 @@ export type StorageManager = {
 };
 
 export function createStorageManager(storage: Storage): StorageManager {
-  const managedKeys = new Set<string>();
-  const cache = new TrackedMap<string, unknown>(new Map());
-
-  // register event listener to update local state on storage changes
-  // StorageEvent is only fired for changes to localStorage across documents,
-  // but it's safe to register the listener for both storage types and
-  // ignore irrelevant events.
-  window.addEventListener(
-    'storage',
-    function ({ key, newValue, storageArea }: StorageEvent) {
-      if (!key) {
-        return;
-      }
-
-      // skip changes to other keys
-      if (!managedKeys.has(key)) {
-        return;
-      }
-
-      // ensure this event is for the storage area we manage
-      // storageArea can be null in test environments, so we allow it through
-      if (storageArea !== null && storageArea !== storage) {
-        return;
-      }
-
-      // skip if setting to same value
-      if (cache.get(key) === newValue) {
-        return;
-      }
-
-      cache.set(key, jsonParseAndFreeze(newValue));
-    },
-  );
+  const trackedStorage = new TrackedStorage(storage);
 
   function initializeKey(key: string) {
-    if (!managedKeys.has(key)) {
-      managedKeys.add(key);
-      cache.set(key, jsonParseAndFreeze(storage.getItem(key)));
-    }
+    // TrackedStorage automatically initializes keys on access, but we can
+    // pre-emptively access it to ensure it's in the cache
+    trackedStorage.getItem(key);
   }
 
   function clearCache() {
-    managedKeys.clear();
-    cache.clear();
+    trackedStorage.clearCache();
   }
 
   function decoratorFactory(...args: unknown[]): unknown {
@@ -110,11 +59,14 @@ export function createStorageManager(storage: Storage): StorageManager {
         enumerable: true,
         configurable: true,
         get() {
-          const cachedValue = cache.get(storageKey);
-          if (cachedValue !== undefined) {
-            return cachedValue;
+          const value = trackedStorage.getItem(storageKey);
+
+          // If value exists in storage, return it
+          if (value !== null) {
+            return value;
           }
 
+          // If no value in storage, try descriptor initializer
           if (descriptor?.initializer) {
             return (descriptor.initializer as () => unknown).call(target);
           }
@@ -122,13 +74,7 @@ export function createStorageManager(storage: Storage): StorageManager {
           return undefined;
         },
         set(value: unknown) {
-          const json = JSON.stringify(value);
-
-          // Update cache with a frozen copy of the value
-          cache.set(storageKey, jsonParseAndFreeze(json));
-
-          // Update the actual storage area
-          storage.setItem(storageKey, json);
+          trackedStorage.setItem(storageKey, value);
         },
       };
     }
