@@ -82,7 +82,7 @@
     "eslint-plugin-ember": "^12.3.3",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-n": "^17.15.1",
-    "globals": "^16.1.0",
+    "globals": "^17.0.0",
     "prettier": "3.8.0",
     "prettier-plugin-ember-template-tag": "^2.1.1",
     "qunit": "^2.24.1",
