@@ -82,16 +82,20 @@ export class TrackedStorage {
     this.#storage = storage;
     this.#prefix = prefix ?? DEFAULT_PREFIX;
     const existingCaches = sharedCaches.get(this.#storage);
-    const cacheWithPrefixExists =
-      existingCaches && existingCaches.has(this.#prefix);
 
-    if (!cacheWithPrefixExists) {
-      const cache = new TrackedMap<string, unknown>(new Map());
-
+    if (!existingCaches) {
       sharedCaches.set(
         this.#storage,
         new Map<string, TrackedMap<string, unknown>>(),
       );
+    }
+
+    const cacheWithPrefixExists = sharedCaches
+      .get(this.#storage)!
+      .has(this.#prefix);
+
+    if (!cacheWithPrefixExists) {
+      const cache = new TrackedMap<string, unknown>(new Map());
 
       sharedCaches.get(this.#storage)!.set(this.#prefix, cache);
     }
