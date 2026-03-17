@@ -271,8 +271,14 @@ storageTypes.forEach(({ name, storage: windowStorage }) => {
       });
 
       test('managed keys do not pollute across different prefixes', function (assert) {
-        const storage1 = new TrackedStorage(windowStorage, 'prefix1');
-        const storage2 = new TrackedStorage(windowStorage, 'prefix2');
+        const storage1 = new TrackedStorage(
+          windowStorage,
+          'pollutionTestPrefix1',
+        );
+        const storage2 = new TrackedStorage(
+          windowStorage,
+          'pollutionTestPrefix2',
+        );
 
         storage1.setItem('key1', 'value1');
         storage1.setItem('key2', 'value2');
