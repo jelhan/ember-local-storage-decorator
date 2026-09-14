@@ -122,6 +122,43 @@ Due to limitations of the Web Storage API, direct changes to the storage
 bypassing the decorator can not be observed. Therefore you _should not_
 manipulate `window.localStorage` or `window.sessionStorage` directly.
 
+### Configuration
+
+You can configure the prefix used for storage keys by using the `createLocalStorageDecorator` and `createSessionStorageDecorator` functions. To use a configured decorator, you need to create it and supply the options. It is recommended to do this in a new file at `app/storage.js` (or `.ts`).
+
+For example, setting up a configured localStorage looks like this:
+
+```js
+// app/storage.js
+
+import { createLocalStorageDecorator} from 'ember-local-storage-decorator';
+
+const { 
+  localStorage, 
+  clearLocalStorageCache, 
+  initializeLocalStorageKey,
+} = createLocalStorageDecorator({ prefix: 'my-app:' }); // note that you need to specify any separators
+```
+
+Then you can use the configured decorator in your classes:
+
+```gjs
+import Component from '@glimmer/component';
+// import from the configured storage file, not directly from 'ember-local-storage-decorator'
+import { localStorage } from 'my-app/app/storage';
+
+export default class MyComponent extends Component {
+  @localStorage foo = 'bar';
+
+  <template>
+    {{! "bar" in the template and in LocalStorage }}
+    <p>{{this.foo}}</p>
+  </template>
+}
+```
+
+The same pattern works with SessionStorage.
+
 ## Testing
 
 `window.localStorage` and `window.sessionStorage` are global state, which is shared between test runs.

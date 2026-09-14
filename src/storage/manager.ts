@@ -38,15 +38,39 @@ function isElementDescriptor(...args: unknown[]): boolean {
   );
 }
 
+function storageKeyFor(key: string, prefix: string = ''): string {
+  return `${prefix}${key}`;
+}
+
+// overloaded decorator factory
+export interface StorageDecoratorFactory {
+  (...args: ElementDescriptor): void;
+  (): (target: object, key: string) => void;
+  (customKey: string): (target: object, key: string) => void;
+}
+
 export type StorageManager = {
-  decoratorFactory: (...args: unknown[]) => unknown;
+  decoratorFactory: StorageDecoratorFactory;
   clearCache: () => void;
   initializeKey: (key: string) => void;
 };
 
-export function createStorageManager(storage: Storage): StorageManager {
+export interface StorageOptions {
+  /**
+   * Added verbatim to the beginning of every storage key.
+   * Include any desired separator, for example `"my-app:"`.
+   */
+  prefix?: string;
+}
+
+export function createStorageManager(
+  storage: Storage,
+  options: StorageOptions = {},
+): StorageManager {
   const managedKeys = new Set<string>();
   const cache = new TrackedMap<string, unknown>(new Map());
+
+  const keyPrefix = options.prefix ?? '';
 
   // register event listener to update local state on storage changes
   // StorageEvent is only fired for changes to localStorage across documents,
@@ -59,8 +83,10 @@ export function createStorageManager(storage: Storage): StorageManager {
         return;
       }
 
+      const storageKey = storageKeyFor(key, keyPrefix);
+
       // skip changes to other keys
-      if (!managedKeys.has(key)) {
+      if (!managedKeys.has(storageKey)) {
         return;
       }
 
@@ -71,18 +97,19 @@ export function createStorageManager(storage: Storage): StorageManager {
       }
 
       // skip if setting to same value
-      if (cache.get(key) === newValue) {
+      if (cache.get(storageKey) === newValue) {
         return;
       }
 
-      cache.set(key, jsonParseAndFreeze(newValue));
+      cache.set(storageKey, jsonParseAndFreeze(newValue));
     },
   );
 
   function initializeKey(key: string) {
-    if (!managedKeys.has(key)) {
-      managedKeys.add(key);
-      cache.set(key, jsonParseAndFreeze(storage.getItem(key)));
+    const storageKey = storageKeyFor(key, keyPrefix);
+    if (!managedKeys.has(storageKey)) {
+      managedKeys.add(storageKey);
+      cache.set(storageKey, jsonParseAndFreeze(storage.getItem(storageKey)));
     }
   }
 
@@ -91,6 +118,11 @@ export function createStorageManager(storage: Storage): StorageManager {
     cache.clear();
   }
 
+  function decoratorFactory(...args: ElementDescriptor): void;
+  function decoratorFactory(): (target: object, key: string) => void;
+  function decoratorFactory(
+    customKey: string,
+  ): (target: object, key: string) => void;
   function decoratorFactory(...args: unknown[]): unknown {
     const isDirectDecoratorInvocation = isElementDescriptor(...args);
     const customKey: string | undefined = isDirectDecoratorInvocation
@@ -102,9 +134,11 @@ export function createStorageManager(storage: Storage): StorageManager {
       key: string,
       descriptor?: DecoratorPropertyDescriptor,
     ): DecoratorPropertyDescriptor {
-      const storageKey = customKey ?? key;
+      const initialKey = customKey ?? key;
 
-      initializeKey(storageKey);
+      initializeKey(initialKey);
+
+      const storageKey = storageKeyFor(initialKey, keyPrefix);
 
       return {
         enumerable: true,

@@ -8,6 +8,8 @@ import {
   clearSessionStorageCache,
   initializeLocalStorageKey,
   initializeSessionStorageKey,
+  createLocalStorageDecorator,
+  createSessionStorageDecorator,
 } from '#src/index.ts';
 
 const storageTypes = [
@@ -17,6 +19,7 @@ const storageTypes = [
     storage: window.localStorage,
     clearCache: clearLocalStorageCache,
     initializeKey: initializeLocalStorageKey,
+    decoratorCreator: createLocalStorageDecorator,
   },
   {
     name: 'sessionStorage',
@@ -24,11 +27,19 @@ const storageTypes = [
     storage: window.sessionStorage,
     clearCache: clearSessionStorageCache,
     initializeKey: initializeSessionStorageKey,
+    decoratorCreator: createSessionStorageDecorator,
   },
 ] as const;
 
 storageTypes.forEach(
-  ({ name, decorator, storage, clearCache, initializeKey }) => {
+  ({
+    name,
+    decorator,
+    storage,
+    clearCache,
+    initializeKey,
+    decoratorCreator,
+  }) => {
     module(`new Unit | Decorator | @${name}`, function (hooks) {
       setupTest(hooks);
 
@@ -110,6 +121,24 @@ storageTypes.forEach(
 
           assert.equal(klass.foo, 'baz');
         });
+
+        test(`supports prefixed ${name} key`, function (assert) {
+          const prefixedKey = `tests:foo`;
+          storage.setItem(prefixedKey, JSON.stringify('bar'));
+
+          const manager = decoratorCreator({ prefix: 'tests:' });
+          // @ts-expect-error -- this works; the factory's key is the name of the storage type
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const decorator = manager[name]!;
+
+          class TestClass {
+            @decorator foo: any;
+          }
+
+          const klass = new TestClass();
+
+          assert.equal(klass.foo, 'bar');
+        });
       });
 
       module('setter', function () {
@@ -179,6 +208,24 @@ storageTypes.forEach(
           klass.foo = 'baz';
 
           assert.equal(JSON.parse(storage.getItem('bar')!), 'baz');
+        });
+
+        test(`supports prefixed ${name} key`, function (assert) {
+          const prefixedKey = `tests:foo`;
+          const manager = decoratorCreator({ prefix: 'tests:' });
+
+          // @ts-expect-error -- this works; the factory's key is the name of the storage type
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const decorator = manager[name];
+
+          class TestClass {
+            @decorator foo: any;
+          }
+
+          const klass = new TestClass();
+
+          klass.foo = 'baz';
+          assert.equal(JSON.parse(storage.getItem(prefixedKey)!), 'baz');
         });
       });
 

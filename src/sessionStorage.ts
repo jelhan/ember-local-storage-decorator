@@ -1,28 +1,32 @@
-import type { ElementDescriptor } from '@ember/-internals/metal';
+import type { StorageManager, StorageOptions } from './storage/manager.ts';
 import { createStorageManager } from './storage/manager.ts';
+
+interface SessionStorageDecorator {
+  sessionStorage: StorageManager['decoratorFactory'];
+  clearSessionStorageCache: StorageManager['clearCache'];
+  initializeSessionStorageKey: StorageManager['initializeKey'];
+}
+
+export function createSessionStorageDecorator(
+  options?: StorageOptions,
+): SessionStorageDecorator {
+  const { decoratorFactory, clearCache, initializeKey } = createStorageManager(
+    window.sessionStorage,
+    options,
+  );
+
+  return {
+    sessionStorage: decoratorFactory,
+    clearSessionStorageCache: clearCache,
+    initializeSessionStorageKey: initializeKey,
+  };
+}
 
 const { decoratorFactory, clearCache, initializeKey } = createStorageManager(
   window.sessionStorage,
 );
 
-// Mirror the same overloads as the localStorage decorator so the interface
-// is identical for consumers.
-export default function sessionStorageDecoratorFactory(
-  ...args: ElementDescriptor
-): void;
-export default function sessionStorageDecoratorFactory(): (
-  target: object,
-  key: string,
-) => void;
-export default function sessionStorageDecoratorFactory(
-  customKey: string,
-): (target: object, key: string) => void;
-export default function sessionStorageDecoratorFactory(
-  ...args: unknown[]
-): unknown {
-  return decoratorFactory(...args);
-}
-
+export default decoratorFactory;
 export {
   clearCache as clearSessionStorageCache,
   initializeKey as initializeSessionStorageKey,
