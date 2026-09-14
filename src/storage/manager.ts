@@ -42,7 +42,7 @@ function storageKeyFor(key: string, prefix: string = ''): string {
   return `${prefix}${key}`;
 }
 
-// overloaded decorator factory
+// Keep the original decorator overloads so TS consumers keep the same typing
 export interface StorageDecoratorFactory {
   (...args: ElementDescriptor): void;
   (): (target: object, key: string) => void;
@@ -118,6 +118,7 @@ export function createStorageManager(
     cache.clear();
   }
 
+  // Keep the original decorator overloads so TS consumers keep the same typing
   function decoratorFactory(...args: ElementDescriptor): void;
   function decoratorFactory(): (target: object, key: string) => void;
   function decoratorFactory(
