@@ -50,10 +50,10 @@
     "tracked-built-ins": "^4.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/eslint-parser": "^7.25.1",
-    "@babel/plugin-transform-typescript": "^7.25.2",
-    "@babel/runtime": "^7.25.6",
+    "@babel/core": "^8.0.0",
+    "@babel/eslint-parser": "^8.0.0",
+    "@babel/plugin-transform-typescript": "^8.0.0",
+    "@babel/runtime": "^8.0.0",
     "@ember/app-tsconfig": "^2.0.0",
     "@ember/library-tsconfig": "^2.0.0",
     "@ember/test-helpers": "^5.2.1",
